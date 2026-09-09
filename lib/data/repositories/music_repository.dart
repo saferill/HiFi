@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/song.dart';
 import '../network/innertube_client.dart';
 import '../parser/search_parser.dart';
+import '../parser/stream_parser.dart';
 
 final musicRepositoryProvider = Provider<MusicRepository>((ref) {
   final innertubeClient = ref.watch(innertubeClientProvider);
@@ -25,5 +26,10 @@ class MusicRepository {
   Future<List<Song>> searchSongs(String query) async {
     final rawJson = await innertubeClient.search(query);
     return parseSearchResults(rawJson);
+  }
+
+  Future<String?> getAudioStreamUrl(String videoId) async {
+    final playerJson = await innertubeClient.getPlayerInfo(videoId);
+    return extractAudioStreamUrl(playerJson);
   }
 }

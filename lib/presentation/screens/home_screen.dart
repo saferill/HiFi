@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/music_repository.dart';
 import '../../domain/entities/song.dart';
+import '../player/player_controller.dart';
 
 class ActiveSearchQueryNotifier extends Notifier<String> {
   @override
@@ -42,8 +43,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final searchAsync = currentQuery.isEmpty
         ? null
         : ref.watch(searchSongsProvider(currentQuery));
+    final playerState = ref.watch(playerControllerProvider);
 
     final theme = Theme.of(context);
+
+    // Listen for player errors to show a snackbar
+    ref.listen<PlayerState>(playerControllerProvider, (previous, next) {
+      if (next.errorMessage != null &&
+          next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: theme.colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -165,7 +181,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.only(top: 8, bottom: 88),
                   itemCount: songs.length,
                   separatorBuilder: (context, index) => const Divider(
                     height: 1,
@@ -174,25 +190,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   itemBuilder: (context, index) {
                     final song = songs[index];
-                    return _SongListTile(song: song);
+                    final isCurrentSong = playerState.currentSong?.videoId == song.videoId;
+
+                    return _SongListTile(
+                      song: song,
+                      isSelected: isCurrentSong,
+                      onTap: () {
+                        ref.read(playerControllerProvider.notifier).playSong(song);
+                      },
+                    );
                   },
                 );
               },
             ),
+      bottomNavigationBar: playerState.currentSong != null
+          ? _MiniPlayer(
+              playerState: playerState,
+              onTogglePlay: () {
+                ref.read(playerControllerProvider.notifier).togglePlayPause();
+              },
+            )
+          : null,
     );
   }
 }
 
 class _SongListTile extends StatelessWidget {
   final Song song;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  const _SongListTile({required this.song});
+  const _SongListTile({
+    required this.song,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return ListTile(
+      onTap: onTap,
+      selected: isSelected,
+      selectedTileColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -239,6 +280,7 @@ class _SongListTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
+          color: isSelected ? theme.colorScheme.primary : null,
         ),
       ),
       subtitle: Text(
@@ -248,7 +290,115 @@ class _SongListTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.bodyMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
+          color: isSelected
+              ? theme.colorScheme.primary.withValues(alpha: 0.8)
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(
+              Icons.graphic_eq_rounded,
+              color: theme.colorScheme.primary,
+            )
+          : null,
+    );
+  }
+}
+
+class _MiniPlayer extends StatelessWidget {
+  final PlayerState playerState;
+  final VoidCallback onTogglePlay;
+
+  const _MiniPlayer({
+    required this.playerState,
+    required this.onTogglePlay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final song = playerState.currentSong;
+    if (song == null) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: 44,
+                height: 44,
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: song.thumbnailUrl.isNotEmpty
+                    ? Image.network(
+                        song.thumbnailUrl,
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.music_note),
+                      )
+                    : const Icon(Icons.music_note),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    song.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    song.artist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (playerState.isLoading)
+              const SizedBox(
+                width: 36,
+                height: 36,
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              )
+            else
+              IconButton.filledTonal(
+                icon: Icon(
+                  playerState.isPlaying ? Icons.pause : Icons.play_arrow,
+                ),
+                onPressed: onTogglePlay,
+              ),
+          ],
         ),
       ),
     );

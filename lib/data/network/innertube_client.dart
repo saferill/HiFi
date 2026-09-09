@@ -66,4 +66,30 @@ class InnertubeClient {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> getPlayerInfo(String videoId) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        'player',
+        data: {
+          'context': _defaultContext,
+          'videoId': videoId,
+        },
+      );
+
+      final data = response.data ?? <String, dynamic>{};
+      developer.log(
+        'Innertube getPlayerInfo success. Status: ${response.statusCode}, videoId: $videoId',
+        name: 'InnertubeClient',
+      );
+      return data;
+    } on DioException catch (e) {
+      developer.log(
+        'Innertube getPlayerInfo error: ${e.message}, response: ${e.response?.data}',
+        name: 'InnertubeClient',
+        error: e,
+      );
+      rethrow;
+    }
+  }
 }
