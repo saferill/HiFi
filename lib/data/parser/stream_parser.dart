@@ -1,3 +1,4 @@
+// Deprecated: diganti youtube_explode_dart
 import 'dart:developer' as developer;
 
 String? extractAudioStreamUrl(Map<String, dynamic> playerJson) {

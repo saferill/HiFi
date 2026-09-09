@@ -67,6 +67,7 @@ class InnertubeClient {
     }
   }
 
+  // Deprecated: diganti youtube_explode_dart
   Future<Map<String, dynamic>> getPlayerInfo(String videoId) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import '../../data/repositories/music_repository.dart';
+import '../../data/services/stream_service.dart';
 import '../../domain/entities/song.dart';
 
 class PlayerState {
@@ -39,13 +39,13 @@ final playerControllerProvider =
 
 class PlayerController extends Notifier<PlayerState> {
   late final AudioPlayer _audioPlayer;
-  StreamSubscription<PlayerStateStreamEvent>? _subscription;
+  StreamSubscription<dynamic>? _subscription;
 
   @override
   PlayerState build() {
     _audioPlayer = AudioPlayer();
 
-    _audioPlayer.playerStateStream.listen((playerState) {
+    _subscription = _audioPlayer.playerStateStream.listen((playerState) {
       final isPlaying = playerState.playing;
       final processingState = playerState.processingState;
       final isBuffering = processingState == ProcessingState.buffering ||
@@ -75,23 +75,23 @@ class PlayerController extends Notifier<PlayerState> {
     );
 
     try {
-      final repository = ref.read(musicRepositoryProvider);
-      final streamUrl = await repository.getAudioStreamUrl(song.videoId);
+      final streamService = ref.read(streamServiceProvider);
+      final streamUrl = await streamService.getAudioStreamUrl(song.videoId);
 
       if (streamUrl == null || streamUrl.isEmpty) {
         state = state.copyWith(
           isLoading: false,
           isPlaying: false,
-          errorMessage: 'STREAM_NEEDS_CIPHER_DECODE (No direct audio stream URL)',
+          errorMessage: 'Gagal mendapatkan audio stream untuk "${song.title}"',
         );
         developer.log(
-          'Failed to play ${song.title}: STREAM_NEEDS_CIPHER_DECODE',
+          'Failed to play ${song.title}: streamUrl is null',
           name: 'PlayerController',
         );
         return;
       }
 
-      developer.log('Loading audio stream: $streamUrl', name: 'PlayerController');
+      developer.log('Loading audio stream via just_audio: $streamUrl', name: 'PlayerController');
       await _audioPlayer.setUrl(streamUrl);
       await _audioPlayer.play();
 
@@ -123,5 +123,3 @@ class PlayerController extends Notifier<PlayerState> {
     state = const PlayerState();
   }
 }
-
-typedef PlayerStateStreamEvent = dynamic;
