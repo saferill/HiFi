@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import '../../data/repositories/music_repository.dart';
+import '../../data/services/native_stream_service.dart';
 // ignore: unused_import
 import '../../data/services/stream_service.dart';
-import '../../data/services/native_stream_service.dart';
 import '../../domain/entities/song.dart';
 
 class PlayerState {
@@ -15,6 +16,10 @@ class PlayerState {
   final Duration duration;
   final bool isPlaying;
   final bool isLoading;
+  final bool isShuffleEnabled;
+  final bool isRadioEnabled;
+  final bool isLoadingMoreQueue;
+  final String? continuationToken;
   final String? errorMessage;
 
   const PlayerState({
@@ -25,6 +30,10 @@ class PlayerState {
     this.duration = Duration.zero,
     this.isPlaying = false,
     this.isLoading = false,
+    this.isShuffleEnabled = false,
+    this.isRadioEnabled = true,
+    this.isLoadingMoreQueue = false,
+    this.continuationToken,
     this.errorMessage,
   });
 
@@ -36,8 +45,13 @@ class PlayerState {
     Duration? duration,
     bool? isPlaying,
     bool? isLoading,
+    bool? isShuffleEnabled,
+    bool? isRadioEnabled,
+    bool? isLoadingMoreQueue,
+    String? continuationToken,
     String? errorMessage,
     bool clearError = false,
+    bool clearContinuation = false,
   }) {
     return PlayerState(
       currentSong: currentSong ?? this.currentSong,
@@ -47,6 +61,12 @@ class PlayerState {
       duration: duration ?? this.duration,
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
+      isShuffleEnabled: isShuffleEnabled ?? this.isShuffleEnabled,
+      isRadioEnabled: isRadioEnabled ?? this.isRadioEnabled,
+      isLoadingMoreQueue: isLoadingMoreQueue ?? this.isLoadingMoreQueue,
+      continuationToken: clearContinuation
+          ? null
+          : (continuationToken ?? this.continuationToken),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
@@ -78,7 +98,10 @@ class PlayerController extends Notifier<PlayerState> {
 
       // Auto-next when song playback completes
       if (processingState == ProcessingState.completed) {
-        developer.log('Song completed, auto-playing next...', name: 'PlayerController');
+        developer.log(
+          'Song completed, auto-playing next...',
+          name: 'PlayerController',
+        );
         playNext();
       }
     });
@@ -107,25 +130,39 @@ class PlayerController extends Notifier<PlayerState> {
     state = state.copyWith(
       queue: List<Song>.unmodifiable(songs),
       currentIndex: startIndex,
+      clearContinuation: true,
     );
 
     playSong(songs[startIndex], index: startIndex);
   }
 
   Future<void> playSong(Song song, {int? index}) async {
+    final existingIndex = state.queue.indexWhere((s) => s.videoId == song.videoId);
     final newIndex = index ??
-        (state.queue.isNotEmpty ? state.queue.indexWhere((s) => s.videoId == song.videoId) : -1);
+        (existingIndex != -1
+            ? existingIndex
+            : (state.queue.isNotEmpty ? state.queue.length : 0));
+
+    final updatedQueue = state.queue.isEmpty
+        ? [song]
+        : (existingIndex == -1 ? [...state.queue, song] : state.queue);
 
     // ignore: avoid_print
     print('[PlayerController] playSong START');
     developer.log('playSong START', name: 'PlayerController');
     // ignore: avoid_print
-    print('[PlayerController] playSong requested: ${song.title} (${song.videoId})');
-    developer.log('playSong requested: ${song.title} (${song.videoId})', name: 'PlayerController');
+    print(
+      '[PlayerController] playSong requested: ${song.title} (${song.videoId})',
+    );
+    developer.log(
+      'playSong requested: ${song.title} (${song.videoId})',
+      name: 'PlayerController',
+    );
 
     state = state.copyWith(
       currentSong: song,
-      currentIndex: newIndex != -1 ? newIndex : state.currentIndex,
+      queue: updatedQueue,
+      currentIndex: newIndex,
       isLoading: true,
       clearError: true,
       position: Duration.zero,
@@ -133,12 +170,9 @@ class PlayerController extends Notifier<PlayerState> {
     );
 
     try {
-      // Deprecated: youtube_explode_dart diganti NewPipeExtractor native
-      // final streamService = ref.read(streamServiceProvider);
-      // final streamUrl = await streamService.getAudioStreamUrl(song.videoId);
-
       final nativeStreamService = ref.read(nativeStreamServiceProvider);
-      final streamUrl = await nativeStreamService.getAudioStreamUrl(song.videoId);
+      final streamUrl =
+          await nativeStreamService.getAudioStreamUrl(song.videoId);
 
       if (streamUrl == null || streamUrl.isEmpty) {
         state = state.copyWith(
@@ -147,7 +181,9 @@ class PlayerController extends Notifier<PlayerState> {
           errorMessage: 'Gagal mendapatkan audio stream untuk "${song.title}"',
         );
         // ignore: avoid_print
-        print('[PlayerController] Failed to play ${song.title}: streamUrl is null');
+        print(
+          '[PlayerController] Failed to play ${song.title}: streamUrl is null',
+        );
         developer.log(
           'Failed to play ${song.title}: streamUrl is null',
           name: 'PlayerController',
@@ -156,8 +192,13 @@ class PlayerController extends Notifier<PlayerState> {
       }
 
       // ignore: avoid_print
-      print('[PlayerController] Loading audio stream via just_audio: $streamUrl');
-      developer.log('Loading audio stream via just_audio: $streamUrl', name: 'PlayerController');
+      print(
+        '[PlayerController] Loading audio stream via just_audio: $streamUrl',
+      );
+      developer.log(
+        'Loading audio stream via just_audio: $streamUrl',
+        name: 'PlayerController',
+      );
       await _audioPlayer.setUrl(
         streamUrl,
         headers: {
@@ -176,10 +217,18 @@ class PlayerController extends Notifier<PlayerState> {
         isPlaying: true,
         clearError: true,
       );
+
+      // Trigger infinite radio fetch in background if near end of queue
+      _checkAndFetchRadioQueue();
     } catch (e, stack) {
       // ignore: avoid_print
       print('[PlayerController] Error playing song ${song.title}: $e');
-      developer.log('Error playing song ${song.title}', name: 'PlayerController', error: e, stackTrace: stack);
+      developer.log(
+        'Error playing song ${song.title}',
+        name: 'PlayerController',
+        error: e,
+        stackTrace: stack,
+      );
       state = state.copyWith(
         isLoading: false,
         isPlaying: false,
@@ -188,7 +237,10 @@ class PlayerController extends Notifier<PlayerState> {
     } finally {
       // ignore: avoid_print
       print('[PlayerController] playSong END, isPlaying=${state.isPlaying}');
-      developer.log('playSong END, isPlaying=${state.isPlaying}', name: 'PlayerController');
+      developer.log(
+        'playSong END, isPlaying=${state.isPlaying}',
+        name: 'PlayerController',
+      );
     }
   }
 
@@ -197,6 +249,9 @@ class PlayerController extends Notifier<PlayerState> {
     if (nextIndex < state.queue.length) {
       state = state.copyWith(currentIndex: nextIndex);
       playSong(state.queue[nextIndex], index: nextIndex);
+    } else if (state.isRadioEnabled && state.currentSong != null) {
+      // Queue exhausted: immediately fetch more radio tracks
+      _fetchRadioQueueAndPlayNext();
     } else {
       developer.log('End of queue reached', name: 'PlayerController');
     }
@@ -215,6 +270,128 @@ class PlayerController extends Notifier<PlayerState> {
       playSong(state.queue[prevIndex], index: prevIndex);
     } else {
       seek(Duration.zero);
+    }
+  }
+
+  void toggleShuffle() {
+    final newShuffleState = !state.isShuffleEnabled;
+
+    if (newShuffleState && state.queue.isNotEmpty && state.currentIndex >= 0) {
+      // Shuffle only upcoming tracks after currentIndex
+      final played = state.queue.sublist(0, state.currentIndex + 1);
+      final upcoming = state.queue.sublist(state.currentIndex + 1).toList()..shuffle();
+
+      state = state.copyWith(
+        isShuffleEnabled: true,
+        queue: [...played, ...upcoming],
+      );
+      developer.log('Queue shuffled for upcoming songs', name: 'PlayerController');
+    } else {
+      state = state.copyWith(isShuffleEnabled: newShuffleState);
+    }
+  }
+
+  void toggleRadioMode() {
+    final newRadioState = !state.isRadioEnabled;
+    state = state.copyWith(isRadioEnabled: newRadioState);
+    if (newRadioState) {
+      _checkAndFetchRadioQueue();
+    }
+  }
+
+  Future<void> _checkAndFetchRadioQueue() async {
+    if (!state.isRadioEnabled || state.isLoadingMoreQueue) return;
+    if (state.currentSong == null) return;
+
+    // Trigger when queue has 4 or fewer songs remaining
+    final songsRemaining = state.queue.length - 1 - state.currentIndex;
+    if (songsRemaining > 4) return;
+
+    state = state.copyWith(isLoadingMoreQueue: true);
+
+    try {
+      developer.log(
+        'Fetching radio tracks for ${state.currentSong!.title}...',
+        name: 'PlayerController',
+      );
+      final repository = ref.read(musicRepositoryProvider);
+      final result = await repository.getRadioTracks(
+        state.currentSong!.videoId,
+        continuation: state.continuationToken,
+      );
+
+      if (result.songs.isNotEmpty) {
+        final existingIds = state.queue.map((s) => s.videoId).toSet();
+        var newSongs = result.songs
+            .where((s) => !existingIds.contains(s.videoId))
+            .toList();
+
+        if (state.isShuffleEnabled) {
+          newSongs.shuffle();
+        }
+
+        if (newSongs.isNotEmpty) {
+          state = state.copyWith(
+            queue: [...state.queue, ...newSongs],
+            continuationToken: result.continuationToken,
+            isLoadingMoreQueue: false,
+          );
+          developer.log(
+            'Appended ${newSongs.length} radio songs to queue. Total queue: ${state.queue.length}',
+            name: 'PlayerController',
+          );
+          return;
+        }
+      }
+    } catch (e) {
+      developer.log(
+        'Failed to fetch radio tracks: $e',
+        name: 'PlayerController',
+        error: e,
+      );
+    } finally {
+      state = state.copyWith(isLoadingMoreQueue: false);
+    }
+  }
+
+  Future<void> _fetchRadioQueueAndPlayNext() async {
+    if (state.isLoadingMoreQueue || state.currentSong == null) return;
+    state = state.copyWith(isLoadingMoreQueue: true);
+
+    try {
+      final repository = ref.read(musicRepositoryProvider);
+      final result = await repository.getRadioTracks(
+        state.currentSong!.videoId,
+        continuation: state.continuationToken,
+      );
+
+      final existingIds = state.queue.map((s) => s.videoId).toSet();
+      var newSongs =
+          result.songs.where((s) => !existingIds.contains(s.videoId)).toList();
+
+      if (state.isShuffleEnabled) {
+        newSongs.shuffle();
+      }
+
+      if (newSongs.isNotEmpty) {
+        final nextIndex = state.queue.length;
+        state = state.copyWith(
+          queue: [...state.queue, ...newSongs],
+          currentIndex: nextIndex,
+          continuationToken: result.continuationToken,
+          isLoadingMoreQueue: false,
+        );
+        playSong(newSongs.first, index: nextIndex);
+        return;
+      }
+    } catch (e) {
+      developer.log(
+        'Failed to fetch radio queue on exhaustion: $e',
+        name: 'PlayerController',
+        error: e,
+      );
+    } finally {
+      state = state.copyWith(isLoadingMoreQueue: false);
     }
   }
 

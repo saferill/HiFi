@@ -15,10 +15,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (duration.inHours > 0) {
-      final hours = duration.inHours.toString();
-      return '$hours:$minutes:$seconds';
-    }
     return '$minutes:$seconds';
   }
 
@@ -26,32 +22,34 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   Widget build(BuildContext context) {
     final playerState = ref.watch(playerControllerProvider);
     final playerNotifier = ref.read(playerControllerProvider.notifier);
-    final song = playerState.currentSong;
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final song = playerState.currentSong;
 
     if (song == null) {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 30),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
         body: const Center(
-          child: Text('No song playing'),
+          child: Text('Tidak ada lagu yang sedang diputar'),
         ),
       );
     }
 
-    final totalSeconds = playerState.duration.inMilliseconds.toDouble() / 1000.0;
-    final currentSeconds = playerState.position.inMilliseconds.toDouble() / 1000.0;
+    final totalSeconds = playerState.duration.inMilliseconds / 1000.0;
+    final currentSeconds = playerState.position.inMilliseconds / 1000.0;
     final maxSlider = totalSeconds > 0 ? totalSeconds : 1.0;
     final currentSlider = _dragValue ?? (currentSeconds.clamp(0.0, maxSlider));
 
     final hasPrevious = playerState.currentIndex > 0;
-    final hasNext = playerState.currentIndex + 1 < playerState.queue.length;
+    final hasNext =
+        (playerState.currentIndex + 1 < playerState.queue.length) ||
+        playerState.isRadioEnabled;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -66,7 +64,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         title: Column(
           children: [
             Text(
-              'PLAYING FROM QUEUE',
+              playerState.isRadioEnabled
+                  ? 'PLAYING FROM INFINITE RADIO'
+                  : 'PLAYING FROM QUEUE',
               style: theme.textTheme.labelSmall?.copyWith(
                 letterSpacing: 1.5,
                 fontWeight: FontWeight.bold,
@@ -74,12 +74,25 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               ),
             ),
             if (playerState.queue.isNotEmpty)
-              Text(
-                'Track ${playerState.currentIndex + 1} of ${playerState.queue.length}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Track ${playerState.currentIndex + 1} of ${playerState.queue.length}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (playerState.isRadioEnabled) ...[
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.all_inclusive_rounded,
+                      size: 14,
+                      color: colorScheme.primary,
+                    ),
+                  ],
+                ],
               ),
           ],
         ),
@@ -113,7 +126,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                           ? Image.network(
                               song.thumbnailUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
                                 color: colorScheme.surfaceContainerHighest,
                                 child: Icon(
                                   Icons.music_note_rounded,
@@ -166,8 +180,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 4,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                  thumbShape:
+                      const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape:
+                      const RoundSliderOverlayShape(overlayRadius: 14),
                   activeTrackColor: colorScheme.primary,
                   inactiveTrackColor: colorScheme.surfaceContainerHighest,
                   thumbColor: colorScheme.primary,
@@ -182,7 +198,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     });
                   },
                   onChangeEnd: (val) {
-                    playerNotifier.seek(Duration(milliseconds: (val * 1000).round()));
+                    playerNotifier
+                        .seek(Duration(milliseconds: (val * 1000).round()));
                     setState(() {
                       _dragValue = null;
                     });
@@ -198,7 +215,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     Text(
                       _formatDuration(
                         _dragValue != null
-                            ? Duration(milliseconds: (_dragValue! * 1000).round())
+                            ? Duration(
+                                milliseconds: (_dragValue! * 1000).round())
                             : playerState.position,
                       ),
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -221,9 +239,23 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Shuffle Button
+                  IconButton(
+                    iconSize: 26,
+                    icon: Icon(
+                      Icons.shuffle_rounded,
+                      color: playerState.isShuffleEnabled
+                          ? colorScheme.primary
+                          : colorScheme.onSurface.withValues(alpha: 0.38),
+                    ),
+                    tooltip: playerState.isShuffleEnabled
+                        ? 'Shuffle Aktif'
+                        : 'Acak Antrean',
+                    onPressed: playerNotifier.toggleShuffle,
+                  ),
                   // Previous Button
                   IconButton(
-                    iconSize: 42,
+                    iconSize: 38,
                     icon: Icon(
                       Icons.skip_previous_rounded,
                       color: hasPrevious
@@ -234,8 +266,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                   ),
                   // Play/Pause Button
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: 70,
+                    height: 70,
                     decoration: BoxDecoration(
                       color: colorScheme.primary,
                       shape: BoxShape.circle,
@@ -256,7 +288,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                             ),
                           )
                         : IconButton(
-                            iconSize: 38,
+                            iconSize: 36,
                             icon: Icon(
                               playerState.isPlaying
                                   ? Icons.pause_rounded
@@ -268,7 +300,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                   ),
                   // Next Button
                   IconButton(
-                    iconSize: 42,
+                    iconSize: 38,
                     icon: Icon(
                       Icons.skip_next_rounded,
                       color: hasNext
@@ -276,6 +308,20 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                           : colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                     onPressed: hasNext ? playerNotifier.playNext : null,
+                  ),
+                  // Infinite Autoplay / Radio Mode Toggle
+                  IconButton(
+                    iconSize: 26,
+                    icon: Icon(
+                      Icons.all_inclusive_rounded,
+                      color: playerState.isRadioEnabled
+                          ? colorScheme.primary
+                          : colorScheme.onSurface.withValues(alpha: 0.38),
+                    ),
+                    tooltip: playerState.isRadioEnabled
+                        ? 'Autoplay Radio Aktif'
+                        : 'Autoplay Radio Mati',
+                    onPressed: playerNotifier.toggleRadioMode,
                   ),
                 ],
               ),

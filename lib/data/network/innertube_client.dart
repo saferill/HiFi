@@ -67,7 +67,46 @@ class InnertubeClient {
     }
   }
 
-  // Deprecated: diganti youtube_explode_dart
+  Future<Map<String, dynamic>> getWatchNext({
+    required String videoId,
+    String? playlistId,
+    String? continuation,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {
+        'context': _defaultContext,
+      };
+
+      if (continuation != null && continuation.isNotEmpty) {
+        body['continuation'] = continuation;
+      } else {
+        body['videoId'] = videoId;
+        body['playlistId'] = playlistId ?? 'RDAMVM$videoId';
+        body['isAudioOnly'] = true;
+      }
+
+      final response = await _dio.post<Map<String, dynamic>>(
+        'next',
+        data: body,
+      );
+
+      final data = response.data ?? <String, dynamic>{};
+      developer.log(
+        'Innertube getWatchNext success. Status: ${response.statusCode}, videoId: $videoId',
+        name: 'InnertubeClient',
+      );
+      return data;
+    } on DioException catch (e) {
+      developer.log(
+        'Innertube getWatchNext error: ${e.message}, response: ${e.response?.data}',
+        name: 'InnertubeClient',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+
+  // Deprecated: diganti youtube_explode_dart / native NewPipeExtractor
   Future<Map<String, dynamic>> getPlayerInfo(String videoId) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
