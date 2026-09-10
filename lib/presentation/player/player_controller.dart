@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+// ignore: unused_import
 import '../../data/services/stream_service.dart';
+import '../../data/services/native_stream_service.dart';
 import '../../domain/entities/song.dart';
 
 class PlayerState {
@@ -80,8 +82,12 @@ class PlayerController extends Notifier<PlayerState> {
     );
 
     try {
-      final streamService = ref.read(streamServiceProvider);
-      final streamUrl = await streamService.getAudioStreamUrl(song.videoId);
+      // Deprecated: youtube_explode_dart diganti NewPipeExtractor native
+      // final streamService = ref.read(streamServiceProvider);
+      // final streamUrl = await streamService.getAudioStreamUrl(song.videoId);
+
+      final nativeStreamService = ref.read(nativeStreamServiceProvider);
+      final streamUrl = await nativeStreamService.getAudioStreamUrl(song.videoId);
 
       if (streamUrl == null || streamUrl.isEmpty) {
         state = state.copyWith(
