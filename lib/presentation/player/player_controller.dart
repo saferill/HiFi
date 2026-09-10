@@ -9,12 +9,20 @@ import '../../domain/entities/song.dart';
 
 class PlayerState {
   final Song? currentSong;
+  final List<Song> queue;
+  final int currentIndex;
+  final Duration position;
+  final Duration duration;
   final bool isPlaying;
   final bool isLoading;
   final String? errorMessage;
 
   const PlayerState({
     this.currentSong,
+    this.queue = const [],
+    this.currentIndex = -1,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
     this.isPlaying = false,
     this.isLoading = false,
     this.errorMessage,
@@ -22,6 +30,10 @@ class PlayerState {
 
   PlayerState copyWith({
     Song? currentSong,
+    List<Song>? queue,
+    int? currentIndex,
+    Duration? position,
+    Duration? duration,
     bool? isPlaying,
     bool? isLoading,
     String? errorMessage,
@@ -29,6 +41,10 @@ class PlayerState {
   }) {
     return PlayerState(
       currentSong: currentSong ?? this.currentSong,
+      queue: queue ?? this.queue,
+      currentIndex: currentIndex ?? this.currentIndex,
+      position: position ?? this.position,
+      duration: duration ?? this.duration,
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
@@ -41,13 +57,15 @@ final playerControllerProvider =
 
 class PlayerController extends Notifier<PlayerState> {
   late final AudioPlayer _audioPlayer;
-  StreamSubscription<dynamic>? _subscription;
+  StreamSubscription<dynamic>? _playerStateSub;
+  StreamSubscription<dynamic>? _positionSub;
+  StreamSubscription<dynamic>? _durationSub;
 
   @override
   PlayerState build() {
     _audioPlayer = AudioPlayer();
 
-    _subscription = _audioPlayer.playerStateStream.listen((playerState) {
+    _playerStateSub = _audioPlayer.playerStateStream.listen((playerState) {
       final isPlaying = playerState.playing;
       final processingState = playerState.processingState;
       final isBuffering = processingState == ProcessingState.buffering ||
@@ -57,17 +75,47 @@ class PlayerController extends Notifier<PlayerState> {
         isPlaying: isPlaying && processingState != ProcessingState.completed,
         isLoading: isBuffering,
       );
+
+      // Auto-next when song playback completes
+      if (processingState == ProcessingState.completed) {
+        developer.log('Song completed, auto-playing next...', name: 'PlayerController');
+        playNext();
+      }
+    });
+
+    _positionSub = _audioPlayer.positionStream.listen((pos) {
+      state = state.copyWith(position: pos);
+    });
+
+    _durationSub = _audioPlayer.durationStream.listen((dur) {
+      state = state.copyWith(duration: dur ?? Duration.zero);
     });
 
     ref.onDispose(() {
-      _subscription?.cancel();
+      _playerStateSub?.cancel();
+      _positionSub?.cancel();
+      _durationSub?.cancel();
       _audioPlayer.dispose();
     });
 
     return const PlayerState();
   }
 
-  Future<void> playSong(Song song) async {
+  void playQueue(List<Song> songs, int startIndex) {
+    if (songs.isEmpty || startIndex < 0 || startIndex >= songs.length) return;
+
+    state = state.copyWith(
+      queue: List<Song>.unmodifiable(songs),
+      currentIndex: startIndex,
+    );
+
+    playSong(songs[startIndex], index: startIndex);
+  }
+
+  Future<void> playSong(Song song, {int? index}) async {
+    final newIndex = index ??
+        (state.queue.isNotEmpty ? state.queue.indexWhere((s) => s.videoId == song.videoId) : -1);
+
     // ignore: avoid_print
     print('[PlayerController] playSong START');
     developer.log('playSong START', name: 'PlayerController');
@@ -77,8 +125,11 @@ class PlayerController extends Notifier<PlayerState> {
 
     state = state.copyWith(
       currentSong: song,
+      currentIndex: newIndex != -1 ? newIndex : state.currentIndex,
       isLoading: true,
       clearError: true,
+      position: Duration.zero,
+      duration: Duration.zero,
     );
 
     try {
@@ -139,6 +190,37 @@ class PlayerController extends Notifier<PlayerState> {
       print('[PlayerController] playSong END, isPlaying=${state.isPlaying}');
       developer.log('playSong END, isPlaying=${state.isPlaying}', name: 'PlayerController');
     }
+  }
+
+  void playNext() {
+    final nextIndex = state.currentIndex + 1;
+    if (nextIndex < state.queue.length) {
+      state = state.copyWith(currentIndex: nextIndex);
+      playSong(state.queue[nextIndex], index: nextIndex);
+    } else {
+      developer.log('End of queue reached', name: 'PlayerController');
+    }
+  }
+
+  void playPrevious() {
+    // If played more than 3 seconds, restart current track
+    if (state.position.inSeconds > 3) {
+      seek(Duration.zero);
+      return;
+    }
+
+    final prevIndex = state.currentIndex - 1;
+    if (prevIndex >= 0 && prevIndex < state.queue.length) {
+      state = state.copyWith(currentIndex: prevIndex);
+      playSong(state.queue[prevIndex], index: prevIndex);
+    } else {
+      seek(Duration.zero);
+    }
+  }
+
+  Future<void> seek(Duration position) async {
+    state = state.copyWith(position: position);
+    await _audioPlayer.seek(position);
   }
 
   Future<void> togglePlayPause() async {

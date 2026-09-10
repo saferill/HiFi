@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/music_repository.dart';
 import '../../domain/entities/song.dart';
 import '../player/player_controller.dart';
+import '../player/now_playing_screen.dart';
 
 class ActiveSearchQueryNotifier extends Notifier<String> {
   @override
@@ -196,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       song: song,
                       isSelected: isCurrentSong,
                       onTap: () {
-                        ref.read(playerControllerProvider.notifier).playSong(song);
+                        ref.read(playerControllerProvider.notifier).playQueue(songs, index);
                       },
                     );
                   },
@@ -208,6 +209,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               playerState: playerState,
               onTogglePlay: () {
                 ref.read(playerControllerProvider.notifier).togglePlayPause();
+              },
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const NowPlayingScreen(),
+                  ),
+                );
               },
             )
           : null,
@@ -308,10 +316,12 @@ class _SongListTile extends StatelessWidget {
 class _MiniPlayer extends StatelessWidget {
   final PlayerState playerState;
   final VoidCallback onTogglePlay;
+  final VoidCallback onTap;
 
   const _MiniPlayer({
     required this.playerState,
     required this.onTogglePlay,
+    required this.onTap,
   });
 
   @override
@@ -322,83 +332,90 @@ class _MiniPlayer extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: 44,
-                height: 44,
-                color: theme.colorScheme.surfaceContainerHighest,
-                child: song.thumbnailUrl.isNotEmpty
-                    ? Image.network(
-                        song.thumbnailUrl,
-                        width: 44,
-                        height: 44,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.music_note),
-                      )
-                    : const Icon(Icons.music_note),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Hero(
+                tag: 'player_artwork_${song.videoId}',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: song.thumbnailUrl.isNotEmpty
+                        ? Image.network(
+                            song.thumbnailUrl,
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.music_note),
+                          )
+                        : const Icon(Icons.music_note),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    song.artist,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      song.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      song.artist,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (playerState.isLoading)
+                const SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
                   ),
-                ],
-              ),
-            ),
-            if (playerState.isLoading)
-              const SizedBox(
-                width: 36,
-                height: 36,
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              else
+                IconButton.filledTonal(
+                  icon: Icon(
+                    playerState.isPlaying ? Icons.pause : Icons.play_arrow,
+                  ),
+                  onPressed: onTogglePlay,
                 ),
-              )
-            else
-              IconButton.filledTonal(
-                icon: Icon(
-                  playerState.isPlaying ? Icons.pause : Icons.play_arrow,
-                ),
-                onPressed: onTogglePlay,
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
