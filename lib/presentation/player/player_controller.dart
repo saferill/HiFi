@@ -66,6 +66,11 @@ class PlayerController extends Notifier<PlayerState> {
   }
 
   Future<void> playSong(Song song) async {
+    // ignore: avoid_print
+    print('[PlayerController] playSong START');
+    developer.log('playSong START', name: 'PlayerController');
+    // ignore: avoid_print
+    print('[PlayerController] playSong requested: ${song.title} (${song.videoId})');
     developer.log('playSong requested: ${song.title} (${song.videoId})', name: 'PlayerController');
 
     state = state.copyWith(
@@ -84,6 +89,8 @@ class PlayerController extends Notifier<PlayerState> {
           isPlaying: false,
           errorMessage: 'Gagal mendapatkan audio stream untuk "${song.title}"',
         );
+        // ignore: avoid_print
+        print('[PlayerController] Failed to play ${song.title}: streamUrl is null');
         developer.log(
           'Failed to play ${song.title}: streamUrl is null',
           name: 'PlayerController',
@@ -91,9 +98,21 @@ class PlayerController extends Notifier<PlayerState> {
         return;
       }
 
+      // ignore: avoid_print
+      print('[PlayerController] Loading audio stream via just_audio: $streamUrl');
       developer.log('Loading audio stream via just_audio: $streamUrl', name: 'PlayerController');
-      await _audioPlayer.setUrl(streamUrl);
+      await _audioPlayer.setUrl(
+        streamUrl,
+        headers: {
+          'User-Agent':
+              'com.google.android.apps.youtube.music/7.16.53 (Linux; U; Android 11) gzip',
+        },
+      );
+      // ignore: avoid_print
+      print('[PlayerController] setUrl completed, calling play()');
       await _audioPlayer.play();
+      // ignore: avoid_print
+      print('[PlayerController] play() completed');
 
       state = state.copyWith(
         isLoading: false,
@@ -101,12 +120,18 @@ class PlayerController extends Notifier<PlayerState> {
         clearError: true,
       );
     } catch (e, stack) {
+      // ignore: avoid_print
+      print('[PlayerController] Error playing song ${song.title}: $e');
       developer.log('Error playing song ${song.title}', name: 'PlayerController', error: e, stackTrace: stack);
       state = state.copyWith(
         isLoading: false,
         isPlaying: false,
         errorMessage: 'Playback error: $e',
       );
+    } finally {
+      // ignore: avoid_print
+      print('[PlayerController] playSong END, isPlaying=${state.isPlaying}');
+      developer.log('playSong END, isPlaying=${state.isPlaying}', name: 'PlayerController');
     }
   }
 
