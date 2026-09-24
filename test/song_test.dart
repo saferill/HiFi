@@ -24,6 +24,34 @@ void main() {
     });
   });
 
+  group('durationSeconds', () {
+    test('derives from the duration string so parsers cannot disagree', () {
+      // Every parser sets `duration`; none of them sets seconds by hand.
+      expect(
+        const Song(
+          videoId: 'abc',
+          title: 'Title',
+          artist: 'Artist',
+          thumbnailUrl: '',
+          duration: '2:46',
+        ).durationSeconds,
+        166,
+      );
+    });
+
+    test('is null when the response carried no length', () {
+      expect(
+        const Song(
+          videoId: 'abc',
+          title: 'Title',
+          artist: 'Artist',
+          thumbnailUrl: '',
+        ).durationSeconds,
+        isNull,
+      );
+    });
+  });
+
   group('Song equality', () {
     const song = Song(
       videoId: 'abc',

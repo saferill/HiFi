@@ -97,7 +97,6 @@ List<Song> defaultSongs() => const <Song>[
     artist: 'Imagine Dragons',
     thumbnailUrl: '',
     duration: '2:46',
-    durationSeconds: 166,
   ),
   Song(
     videoId: 'D9G1VOjN_84',
@@ -105,7 +104,6 @@ List<Song> defaultSongs() => const <Song>[
     artist: 'Imagine Dragons',
     thumbnailUrl: '',
     duration: '3:53',
-    durationSeconds: 233,
     isExplicit: true,
   ),
 ];

@@ -7,7 +7,6 @@
 library;
 
 import '../../domain/entities/media_item.dart';
-import '../../domain/entities/song.dart';
 
 Map<String, dynamic>? asMap(Object? value) =>
     value is Map<String, dynamic> ? value : null;
@@ -194,6 +193,3 @@ String? twoRowPageType(Object? renderer) {
   ]);
   return pageType is String ? pageType : null;
 }
-
-/// A duration string (`3:24`, `1:02:33`) in seconds, or null when unparseable.
-int? durationToSeconds(String? text) => Song.parseDuration(text);

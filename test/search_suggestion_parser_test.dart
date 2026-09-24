@@ -8,7 +8,8 @@ void main() {
     test('joins the suggestion runs into one query', () {
       final suggestions = parseSearchSuggestions(searchSuggestionsResponse());
 
-      expect(suggestions, hasLength(3));
+      // The first two rows spell the same query, so they collapse into one.
+      expect(suggestions, hasLength(2));
       expect(suggestions.first.query, 'imagine dragons bones');
       expect(suggestions.first.videoId, isNull);
     });

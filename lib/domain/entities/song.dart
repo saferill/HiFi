@@ -7,7 +7,6 @@ class Song {
     required this.artist,
     required this.thumbnailUrl,
     this.duration,
-    this.durationSeconds,
     this.album,
     this.isExplicit = false,
     this.setVideoId,
@@ -21,9 +20,6 @@ class Song {
   /// Human readable length as InnerTube spelled it, e.g. `3:24`.
   final String? duration;
 
-  /// The same length in seconds, parsed. Null when the response omitted it.
-  final int? durationSeconds;
-
   /// Album credit line. Null for radio mixes and music videos.
   final Album? album;
 
@@ -31,6 +27,13 @@ class Song {
 
   /// `playlistSetVideoId`, needed to add/remove a track inside a playlist.
   final String? setVideoId;
+
+  /// The same length in seconds, parsed.
+  ///
+  /// Derived rather than stored: every parser builds a [Song] from an
+  /// InnerTube duration string, and a stored field only creates a way for
+  /// the two to disagree.
+  int? get durationSeconds => parseDuration(duration);
 
   /// Parses `m:ss`, `h:mm:ss` and plain `12:34` into seconds.
   static int? parseDuration(String? text) {
@@ -53,7 +56,6 @@ class Song {
     String? artist,
     String? thumbnailUrl,
     String? duration,
-    int? durationSeconds,
     Album? album,
     bool? isExplicit,
     String? setVideoId,
@@ -64,7 +66,6 @@ class Song {
       artist: artist ?? this.artist,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       duration: duration ?? this.duration,
-      durationSeconds: durationSeconds ?? this.durationSeconds,
       album: album ?? this.album,
       isExplicit: isExplicit ?? this.isExplicit,
       setVideoId: setVideoId ?? this.setVideoId,

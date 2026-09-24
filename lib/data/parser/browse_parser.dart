@@ -392,7 +392,6 @@ Song? parseTwoRowSong(Map<String, dynamic> renderer) {
     artist: artists.isEmpty ? 'Unknown Artist' : artists.first.name,
     thumbnailUrl: twoRowThumbnail(renderer) ?? '',
     duration: duration,
-    durationSeconds: durationToSeconds(duration),
     album: _extractAlbumCredit(subtitleRuns),
     isExplicit: hasExplicitBadge(renderer['subtitleBadges']),
   );
@@ -434,7 +433,6 @@ Song? parseListSong(Map<String, dynamic> renderer) {
     artist: artists.isEmpty ? 'Unknown Artist' : artists.first.name,
     thumbnailUrl: listItemThumbnail(renderer) ?? '',
     duration: duration,
-    durationSeconds: durationToSeconds(duration),
     album: _extractAlbumCredit(subtitleRuns),
     isExplicit: hasExplicitBadge(renderer['badges']),
     setVideoId: setVideoId is String ? setVideoId : null,
