@@ -1,5 +1,10 @@
 plugins {
     id("com.android.application")
+    // Kotlin sources under src/main/kotlin (MainActivity, StreamExtractor) are
+    // only compiled when this is applied. settings.gradle.kts declares the
+    // plugin with `apply false`, so without this line the Kotlin files are
+    // silently ignored and the com.hifi.app/stream channel has no handler.
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }

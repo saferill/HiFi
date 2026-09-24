@@ -169,3 +169,82 @@ jobs:
             echo "::error title=Tests::flutter test failed"
             exit 1
           fi
+
+  # Compiling lib/ is not the same as building the app. This job is the only
+  # place the Kotlin sources get compiled and the APK actually gets linked.
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: master
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx3g
+        run: |
+          set +e
+          flutter build apk --release > /tmp/build.log 2>&1
+          status=$?
+          set -e
+          tail -60 /tmp/build.log
+
+          python3 - <<'PY'
+          import os
+
+          path = '/tmp/build.log'
+          interesting = ('e: ', 'FAILURE:', 'error: ')
+          emitted = 0
+          if os.path.exists(path):
+              for raw in open(path, encoding='utf-8', errors='replace'):
+                  line = raw.rstrip()
+                  if not (line.startswith(interesting)
+                          or ' error: ' in line
+                          or 'What went wrong' in line):
+                      continue
+                  body = line[3:] if line.startswith('e: ') else line
+                  body = body.strip()
+                  text = body[:350].replace('%', '%25')
+                  # Kotlin writes `e: <path>:<line>:<col> <message>`.
+                  token = body.split(' ', 1)[0]
+                  parts = token.rsplit(':', 2)
+                  if len(parts) == 3 and parts[1].isdigit():
+                      path_out = parts[0].replace('file://', '')
+                      print('::error file=' + path_out + ',line=' + parts[1] +
+                            ',col=' + parts[2] + ',title=Android build::' + text)
+                  else:
+                      print('::error title=Android build::' + text)
+                  emitted += 1
+          print('build-error-lines=' + str(emitted))
+          PY
+
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Build::flutter build apk --release failed"
+            exit 1
+          fi
+
+      - name: Report APK
+        run: ls -la build/app/outputs/flutter-apk/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hifi-release-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
