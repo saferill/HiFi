@@ -28,9 +28,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'album/:browseId',
             name: 'album',
-            builder: (context, state) => AlbumScreen(
-              browseId: state.pathParameters['browseId'] ?? '',
-            ),
+            builder: (context, state) =>
+                AlbumScreen(browseId: state.pathParameters['browseId'] ?? ''),
           ),
         ],
       ),

@@ -38,8 +38,10 @@ class MiniPlayer extends ConsumerWidget {
                 duration: playerState.duration,
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: <Widget>[
                     Hero(

@@ -21,14 +21,14 @@ class FakeMusicRepository extends MusicRepository {
     List<SearchSuggestion>? suggestions,
     AlbumPageResult? albumPage,
     this.failure,
-  })  : _browsePage = browsePage ?? defaultBrowsePage(),
-        _searchResults = searchResults ?? defaultSongs(),
-        _suggestions = suggestions ?? defaultSuggestions(),
-        _albumPage = albumPage,
-        super(
-          innertubeClient: InnertubeClient(),
-          streamService: StreamService(),
-        );
+  }) : _browsePage = browsePage ?? defaultBrowsePage(),
+       _searchResults = searchResults ?? defaultSongs(),
+       _suggestions = suggestions ?? defaultSuggestions(),
+       _albumPage = albumPage,
+       super(
+         innertubeClient: InnertubeClient(),
+         streamService: StreamService(),
+       );
 
   final BrowsePage _browsePage;
   final List<Song> _searchResults;
@@ -91,69 +91,69 @@ class FakeMusicRepository extends MusicRepository {
 /// Artwork URLs are left empty on purpose: `Image.network` is not available in
 /// widget tests, and an empty URL renders the built-in placeholder instead.
 List<Song> defaultSongs() => const <Song>[
-      Song(
-        videoId: 'TO-_3tck2tg',
-        title: 'Bones',
-        artist: 'Imagine Dragons',
-        thumbnailUrl: '',
-        duration: '2:46',
-        durationSeconds: 166,
-      ),
-      Song(
-        videoId: 'D9G1VOjN_84',
-        title: 'Enemy',
-        artist: 'Imagine Dragons',
-        thumbnailUrl: '',
-        duration: '3:53',
-        durationSeconds: 233,
-        isExplicit: true,
-      ),
-    ];
+  Song(
+    videoId: 'TO-_3tck2tg',
+    title: 'Bones',
+    artist: 'Imagine Dragons',
+    thumbnailUrl: '',
+    duration: '2:46',
+    durationSeconds: 166,
+  ),
+  Song(
+    videoId: 'D9G1VOjN_84',
+    title: 'Enemy',
+    artist: 'Imagine Dragons',
+    thumbnailUrl: '',
+    duration: '3:53',
+    durationSeconds: 233,
+    isExplicit: true,
+  ),
+];
 
 List<SearchSuggestion> defaultSuggestions() => const <SearchSuggestion>[
-      SearchSuggestion(query: 'imagine dragons bones'),
-      SearchSuggestion(query: 'Bones', videoId: 'TO-_3tck2tg'),
-    ];
+  SearchSuggestion(query: 'imagine dragons bones'),
+  SearchSuggestion(query: 'Bones', videoId: 'TO-_3tck2tg'),
+];
 
 BrowsePage defaultBrowsePage() => BrowsePage(
-      title: 'Home',
-      sections: <BrowseSection>[
-        BrowseSection(title: 'Quick picks', songs: defaultSongs()),
-        BrowseSection(
-          title: 'New releases',
-          albums: <AlbumItem>[
-            const AlbumItem(
-              browseId: 'MPREb_9nqEki4ZLQ4',
-              title: 'Mercury - Act 1',
-              thumbnailUrl: '',
-              artists: <Artist>[
-                Artist(name: 'Imagine Dragons', id: 'UCB0JSO6d5ysH2Mmqz5I9rIw'),
-              ],
-              year: 2021,
-            ),
+  title: 'Home',
+  sections: <BrowseSection>[
+    BrowseSection(title: 'Quick picks', songs: defaultSongs()),
+    BrowseSection(
+      title: 'New releases',
+      albums: <AlbumItem>[
+        const AlbumItem(
+          browseId: 'MPREb_9nqEki4ZLQ4',
+          title: 'Mercury - Act 1',
+          thumbnailUrl: '',
+          artists: <Artist>[
+            Artist(name: 'Imagine Dragons', id: 'UCB0JSO6d5ysH2Mmqz5I9rIw'),
           ],
-        ),
-        BrowseSection(
-          title: 'Moods & genres',
-          moods: <MoodGenre>[
-            const MoodGenre(
-              title: 'Chill',
-              browseId: 'FEmusic_moods_and_genres_category',
-              params: 'ggMPOg1uX1JOQWZR',
-              stripeColor: 0xFF00A0A0,
-            ),
-          ],
+          year: 2021,
         ),
       ],
-    );
+    ),
+    BrowseSection(
+      title: 'Moods & genres',
+      moods: <MoodGenre>[
+        const MoodGenre(
+          title: 'Chill',
+          browseId: 'FEmusic_moods_and_genres_category',
+          params: 'ggMPOg1uX1JOQWZR',
+          stripeColor: 0xFF00A0A0,
+        ),
+      ],
+    ),
+  ],
+);
 
 AlbumPageResult defaultAlbumPage() => AlbumPageResult(
-      album: const AlbumItem(
-        browseId: 'MPREb_9nqEki4ZLQ4',
-        title: 'Mercury - Act 1',
-        thumbnailUrl: '',
-        artists: <Artist>[Artist(name: 'Imagine Dragons')],
-        year: 2021,
-      ),
-      songs: defaultSongs(),
-    );
+  album: const AlbumItem(
+    browseId: 'MPREb_9nqEki4ZLQ4',
+    title: 'Mercury - Act 1',
+    thumbnailUrl: '',
+    artists: <Artist>[Artist(name: 'Imagine Dragons')],
+    year: 2021,
+  ),
+  songs: defaultSongs(),
+);

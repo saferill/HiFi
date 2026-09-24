@@ -183,9 +183,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                   max: maxSlider,
                   onChanged: (val) => setState(() => _dragValue = val),
                   onChangeEnd: (val) {
-                    notifier.seek(
-                      Duration(milliseconds: (val * 1000).round()),
-                    );
+                    notifier.seek(Duration(milliseconds: (val * 1000).round()));
                     setState(() => _dragValue = null);
                   },
                 ),
@@ -244,8 +242,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                           ? colorScheme.onSurface
                           : colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
-                    onPressed:
-                        playerState.hasPrevious ? notifier.playPrevious : null,
+                    onPressed: playerState.hasPrevious
+                        ? notifier.playPrevious
+                        : null,
                   ),
                   Container(
                     width: 70,
@@ -290,8 +289,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                           ? colorScheme.onSurface
                           : colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
-                    onPressed:
-                        playerState.hasNext ? () => notifier.playNext() : null,
+                    onPressed: playerState.hasNext
+                        ? () => notifier.playNext()
+                        : null,
                   ),
                   IconButton(
                     iconSize: 26,
@@ -321,7 +321,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   }
 
   IconData _repeatIcon(PlaybackRepeat mode) => switch (mode) {
-        PlaybackRepeat.one => Icons.repeat_one_rounded,
-        _ => Icons.repeat_rounded,
-      };
+    PlaybackRepeat.one => Icons.repeat_one_rounded,
+    _ => Icons.repeat_rounded,
+  };
 }

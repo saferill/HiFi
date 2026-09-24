@@ -90,9 +90,8 @@ class _Section extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             child: Text(
               section.title!,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         SizedBox(
@@ -148,9 +147,8 @@ class _MoodGrid extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             child: Text(
               title!,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         Padding(
@@ -158,9 +156,7 @@ class _MoodGrid extends StatelessWidget {
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: <Widget>[
-              for (final mood in moods) _MoodChip(mood: mood),
-            ],
+            children: <Widget>[for (final mood in moods) _MoodChip(mood: mood)],
           ),
         ),
       ],
@@ -204,9 +200,8 @@ class _MoodChip extends StatelessWidget {
                     mood.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -330,11 +325,7 @@ class _Card extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Artwork(
-              url: imageUrl,
-              size: 140,
-              radius: circular ? 70 : 12,
-            ),
+            Artwork(url: imageUrl, size: 140, radius: circular ? 70 : 12),
             const SizedBox(height: 8),
             Text(
               title,
@@ -375,9 +366,16 @@ class _BrowseError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(Icons.cloud_off_rounded, size: 48, color: theme.colorScheme.error),
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 48,
+              color: theme.colorScheme.error,
+            ),
             const SizedBox(height: 12),
-            Text('Could not load this page', style: theme.textTheme.titleMedium),
+            Text(
+              'Could not load this page',
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
               error.toString(),
