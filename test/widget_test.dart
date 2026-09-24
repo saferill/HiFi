@@ -39,30 +39,27 @@ void main() {
   }
 
   Finder navDestination(String label) => find.descendant(
-        of: find.byType(NavigationBar),
-        matching: find.text(label),
-      );
+    of: find.byType(NavigationBar),
+    matching: find.text(label),
+  );
 
   /// The shell keeps both tabs alive in an [IndexedStack], so the same title
   /// can exist twice in the tree. Every content assertion is scoped to the tab
   /// it belongs to.
-  Finder inBrowse(String text) => find.descendant(
-        of: find.byType(BrowseScreen),
-        matching: find.text(text),
-      );
+  Finder inBrowse(String text) =>
+      find.descendant(of: find.byType(BrowseScreen), matching: find.text(text));
 
-  Finder inSearch(String text) => find.descendant(
-        of: find.byType(SearchScreen),
-        matching: find.text(text),
-      );
+  Finder inSearch(String text) =>
+      find.descendant(of: find.byType(SearchScreen), matching: find.text(text));
 
   Future<void> goToSearch(WidgetTester tester) async {
     await tester.tap(navDestination('Search'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('opens on the browse tab and loads the home shelves',
-      (WidgetTester tester) async {
+  testWidgets('opens on the browse tab and loads the home shelves', (
+    WidgetTester tester,
+  ) async {
     final repository = await pumpShell(tester);
 
     expect(repository.browseCalls, 1);
@@ -73,8 +70,9 @@ void main() {
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('renders mood tiles, album cards and tracks from the response',
-      (WidgetTester tester) async {
+  testWidgets('renders mood tiles, album cards and tracks from the response', (
+    WidgetTester tester,
+  ) async {
     await pumpShell(tester);
 
     expect(inBrowse('Chill'), findsOneWidget);
@@ -84,8 +82,9 @@ void main() {
     expect(inBrowse('Enemy'), findsOneWidget);
   });
 
-  testWidgets('switching to the search tab shows the search field',
-      (WidgetTester tester) async {
+  testWidgets('switching to the search tab shows the search field', (
+    WidgetTester tester,
+  ) async {
     await pumpShell(tester);
     await goToSearch(tester);
 
@@ -94,8 +93,9 @@ void main() {
     expect(inSearch('Search for music on YouTube Music'), findsOneWidget);
   });
 
-  testWidgets('submitting a query renders the results',
-      (WidgetTester tester) async {
+  testWidgets('submitting a query renders the results', (
+    WidgetTester tester,
+  ) async {
     final repository = await pumpShell(tester);
     await goToSearch(tester);
 
@@ -112,20 +112,22 @@ void main() {
     expect(inSearch('E'), findsOneWidget);
   });
 
-  testWidgets('a failing repository shows the browse error state, not a crash',
-      (WidgetTester tester) async {
-    await pumpShell(
-      tester,
-      repository: FakeMusicRepository(failure: Exception('offline')),
-    );
+  testWidgets(
+    'a failing repository shows the browse error state, not a crash',
+    (WidgetTester tester) async {
+      await pumpShell(
+        tester,
+        repository: FakeMusicRepository(failure: Exception('offline')),
+      );
 
-    expect(inBrowse('Could not load this page'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(BrowseScreen),
-        matching: find.widgetWithText(FilledButton, 'Retry'),
-      ),
-      findsOneWidget,
-    );
-  });
+      expect(inBrowse('Could not load this page'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(BrowseScreen),
+          matching: find.widgetWithText(FilledButton, 'Retry'),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 }
