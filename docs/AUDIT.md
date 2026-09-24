@@ -39,7 +39,17 @@ di-parse.
 | Repeat mode | — | `PlaybackRepeat` (off/all/one) di `player_controller.dart` dan tombolnya di Now Playing |
 | Delete gagal → tidak ada audio stream | — | Rantai fallback: extractor native dulu, lalu `StreamService` Dart. Sebelumnya `stream_service.dart` di-`ignore: unused_import` |
 
-### 1.3 Kebersihan kode
+### 1.3 Build Android
+
+Poin-poin ini baru ketahuan setelah CI **membangun APK**, bukan sekadar
+menganalisis dan menguji `lib/` — dua pekerjaan yang berbeda.
+
+| Masalah | Akibat | Perbaikan |
+| --- | --- | --- |
+| `org.jetbrains.kotlin.android` dideklarasikan `apply false` di `settings.gradle.kts` tetapi **tidak pernah di-apply** modul mana pun | `MainActivity.kt` dan `StreamExtractor.kt` tidak pernah dikompilasi. MethodChannel `com.hifi.app/stream` tidak punya handler, dan `MainActivity` — yang ditunjuk manifest — tidak ada | Plugin di-apply di `android/app/build.gradle.kts` |
+| Tidak ada aturan ProGuard sama sekali | `flutter build apk --release` gagal di `:app:minifyReleaseWithR8` → `Compilation failed to complete`. R8 full mode menganggap rujukan NewPipeExtractor ke `javax.script`, `jdk.dynalink`, `java.beans`, `org.mozilla.javascript.tools` sebagai error | `android/app/proguard-rules.pro` berisi aturan yang relevan untuk dependensi HiFi, diambil dari `androidApp/proguard-rules.pro` dan `service/kotlinYtmusicScraper/proguard-rules.pro` SimpMusic |
+
+### 1.4 Kebersihan kode
 
 - **17 panggilan `print()`** debug (beserta 17 `// ignore: avoid_print`) dihapus.
   Diagnostik tetap ada lewat `dart:developer` `log()`.
@@ -52,7 +62,7 @@ di-parse.
 - **Balapan pemutaran**: menekan dua lagu berurutan bisa membuat `setUrl` yang
   lebih lama menimpa yang lebih baru. Sekarang dijaga token `_loadToken`.
 
-### 1.4 Pengujian
+### 1.5 Pengujian
 
 Tes lama **memanggil YouTube secara langsung** di setiap run
 (`innertube_client_test`, `search_parser_test`, `radio_parser_test`,
@@ -98,6 +108,9 @@ untuk pengaturan.
   HTTPS; flag ini hanya memperbesar permukaan serangan.
 - Tidak ada `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, jadi
   pemutaran latar tidak akan selamat di Android 14+.
+- Rilis ditandatangani dengan debug key (`signingConfig = debug`). Untuk
+  distribusi perlu keystore sendiri.
+- `minSdk` / `targetSdk` masih mengikuti bawaan Flutter.
 
 ### 2.4 Ekstraksi stream
 
@@ -151,7 +164,7 @@ Sandbox pengembangan tidak bisa memasang Flutter: `storage.googleapis.com`
 tidak mungkin dijalankan secara lokal. Karena itu verifikasi dilakukan lewat
 GitHub Actions pada runner GitHub yang punya jaringan penuh.
 
-`.github/workflows/ci.yml` menjalankan, pada setiap push:
+`.github/workflows/ci.yml` menjalankan **dua job** pada setiap push:
 
 1. `flutter pub get` dengan channel `master` (proyek ini dibuat di channel itu
    dan `pubspec.yaml` menuntut Dart `>=3.14.0-201.0.dev`, yang belum ada di
@@ -166,10 +179,28 @@ Langkah 3 dan 4 memakai `if: always()` supaya satu kali jalan CI bisa melaporkan
 semua masalah sekaligus. Anotasi dipakai karena log workflow dilayani dari host
 yang tidak selalu bisa dijangkau dari sandbox, sedangkan API anotasi bisa.
 
+Job kedua, `build-apk`, mengompilasi aplikasinya:
+
+5. `flutter build apk --release` di JDK 17. Error Kotlin/Gradle diubah menjadi
+   anotasi; blok penyebab lengkapnya ditulis ke **step summary**, yang bisa
+   dibaca utuh lewat `gh api .../check-runs/<id> --jq .output.summary` — anotasi
+   hanya memuat satu baris pendek.
+6. Memeriksa isi APK: `com/hifi/app/MainActivity` dan `StreamExtractor` harus ada
+   di dalam dex. Ini yang menahan regresi "build hijau tapi kode Kotlin tidak
+   pernah ikut dikompilasi".
+7. APK diunggah sebagai artefak `hifi-release-apk` (±28 MB), bisa diunduh dari
+   tab Actions di GitHub.
+
+Nomor 6 itu penting: tanpa pemeriksaan isi, menghapus plugin Kotlin lagi akan
+tetap menghasilkan build yang "berhasil".
+
 Baca hasilnya dengan:
 
 ```bash
 gh run list --branch <branch> --limit 1
+# anotasi
 gh api repos/<owner>/<repo>/check-runs/<id>/annotations \
   --jq '.[] | "\(.annotation_level) \(.path):\(.start_line) \(.title)"'
+# ringkasan, termasuk blok penyebab Gradle
+gh api repos/<owner>/<repo>/check-runs/<id> --jq .output.summary
 ```

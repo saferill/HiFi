@@ -264,10 +264,43 @@ jobs:
             exit 1
           fi
 
+      - name: Prove the APK contains the native bridge
+        run: |
+          set -e
+          apk=$(ls build/app/outputs/flutter-apk/*.apk | head -1)
+          echo "apk=$apk"
+          ls -la "$apk"
+          unzip -l "$apk" | head -15
+
+          # The Kotlin plugin was missing once and the .kt files were silently
+          # dropped, so assert the classes actually made it into the dex rather
+          # than trusting that "the build passed".
+          missing=""
+          for class in 'com/hifi/app/MainActivity' 'com/hifi/app/StreamExtractor'; do
+            found=no
+            for entry in $(unzip -Z1 "$apk" | grep -E '^classes.*\.dex$'); do
+              if unzip -p "$apk" "$entry" | grep -aq "$class"; then
+                found=yes
+                break
+              fi
+            done
+            echo "$class -> $found"
+            [ "$found" = yes ] || missing="$missing $class"
+          done
+
+          if [ -n "$missing" ]; then
+            echo "::error title=APK contents::missing from dex:$missing"
+            exit 1
+          fi
+
+          # Sizes are a sanity check that the native extractor was linked in.
+          echo "dex entries:"
+          unzip -Z1 "$apk" | grep -E '^classes.*\.dex$' | wc -l
+
       - name: Report APK
         run: ls -la build/app/outputs/flutter-apk/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: hifi-release-apk
           path: build/app/outputs/flutter-apk/*.apk
