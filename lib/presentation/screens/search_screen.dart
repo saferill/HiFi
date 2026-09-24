@@ -47,6 +47,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       setState(() => _suggestionInput = '');
       return;
     }
+    // Rebuild now so the clear button appears with the first character;
+    // only the suggestion lookup is debounced.
+    setState(() {});
     _debounce = Timer(_suggestionDebounce, () {
       if (mounted) setState(() => _suggestionInput = trimmed);
     });

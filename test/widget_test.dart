@@ -17,9 +17,9 @@ void main() {
     final fake = repository ?? FakeMusicRepository();
     await tester.pumpWidget(
       ProviderScope(
-        overrides: <Override>[
-          musicRepositoryProvider.overrideWithValue(fake),
-        ],
+        // No explicit type argument: the `Override` type is not exported
+        // uniformly across Riverpod majors, and inference already knows it.
+        overrides: [musicRepositoryProvider.overrideWithValue(fake)],
         child: MaterialApp(
           theme: AppTheme.light(),
           home: const HomeScreen(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/parser/album_parser.dart';
 import '../../data/repositories/music_repository.dart';
 import '../../domain/entities/song.dart';
 import '../player/player_controller.dart';
@@ -13,14 +14,20 @@ class AlbumScreen extends ConsumerWidget {
 
   final String browseId;
 
+  /// The album name is only known once the response lands, so the bar falls
+  /// back until then instead of holding a null.
+  String _titleOf(AsyncValue<AlbumPageResult?> value) => value.when(
+        data: (result) => result?.album.title ?? 'Album',
+        loading: () => 'Album',
+        error: (error, stack) => 'Album',
+      );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final albumAsync = ref.watch(albumPageProvider(browseId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(albumAsync.valueOrNull?.album.title ?? 'Album'),
-      ),
+      appBar: AppBar(title: Text(_titleOf(albumAsync))),
       body: albumAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _AlbumError(

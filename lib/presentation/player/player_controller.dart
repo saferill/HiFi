@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../data/parser/radio_parser.dart';
 import '../../data/repositories/music_repository.dart';
 import '../../data/services/native_stream_service.dart';
 import '../../data/services/stream_service.dart';

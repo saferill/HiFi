@@ -302,7 +302,6 @@ class _ArtistCard extends StatelessWidget {
 
 class _Card extends StatelessWidget {
   const _Card({
-    super.key,
     required this.title,
     required this.subtitle,
     required this.imageUrl,
