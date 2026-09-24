@@ -181,7 +181,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -197,41 +197,67 @@ jobs:
       - name: Build release APK
         env:
           GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx3g
+          GRADLE_BUILD_LOG: /tmp/build.log
+          GRADLE_ERROR_SUMMARY: /tmp/errors.txt
         run: |
           set +e
-          flutter build apk --release > /tmp/build.log 2>&1
+          flutter build apk --release > "$GRADLE_BUILD_LOG" 2>&1
           status=$?
           set -e
-          tail -60 /tmp/build.log
 
           python3 - <<'PY'
           import os
+          import re
 
-          path = '/tmp/build.log'
-          interesting = ('e: ', 'FAILURE:', 'error: ')
-          emitted = 0
-          if os.path.exists(path):
-              for raw in open(path, encoding='utf-8', errors='replace'):
-                  line = raw.rstrip()
-                  if not (line.startswith(interesting)
-                          or ' error: ' in line
-                          or 'What went wrong' in line):
-                      continue
-                  body = line[3:] if line.startswith('e: ') else line
-                  body = body.strip()
-                  text = body[:350].replace('%', '%25')
-                  # Kotlin writes `e: <path>:<line>:<col> <message>`.
-                  token = body.split(' ', 1)[0]
-                  parts = token.rsplit(':', 2)
-                  if len(parts) == 3 and parts[1].isdigit():
-                      path_out = parts[0].replace('file://', '')
-                      print('::error file=' + path_out + ',line=' + parts[1] +
-                            ',col=' + parts[2] + ',title=Android build::' + text)
-                  else:
-                      print('::error title=Android build::' + text)
-                  emitted += 1
-          print('build-error-lines=' + str(emitted))
+          log_path = os.environ['GRADLE_BUILD_LOG']
+          summary_path = os.environ['GRADLE_ERROR_SUMMARY']
+
+          text = ''
+          if os.path.exists(log_path):
+              text = open(log_path, encoding='utf-8', errors='replace').read()
+          lines = text.splitlines()
+
+          # Kotlin and Dart both write `<severity>: <path>:<line>:<col> <msg>`.
+          location = re.compile(r'^([^\s]+?):(\d+):(\d+)\s+(.*)$')
+
+          details = []
+          for line in lines:
+              stripped = line.strip()
+              if not (stripped.startswith('e: ')
+                      or stripped.startswith('* What went wrong')
+                      or ' error: ' in stripped
+                      or stripped.startswith('> ')
+                      or stripped.startswith('Caused by')):
+                  continue
+              details.append(stripped)
+              body = stripped[3:] if stripped.startswith('e: ') else stripped
+              match = location.match(body)
+              shown = body[:320].replace('%', '%25')
+              if match:
+                  print('::error file=' + match.group(1) + ',line=' + match.group(2)
+                        + ',col=' + match.group(3) + ',title=Android build::' + shown)
+              else:
+                  print('::error title=Android build::' + shown)
+
+          # Whatever Gradle says after "* What went wrong:" is the cause, and it
+          # is the part worth reading in full — keep it beyond the annotation.
+          report = ['## Android build output', '', '```']
+          report += details[:120] if details else lines[-80:]
+          report.append('```')
+          open(summary_path, 'w', encoding='utf-8').write('\n'.join(report))
+
+          print('detail-lines=' + str(len(details)))
           PY
+
+          # Full multi-line detail goes to the step summary, which the API can
+          # return in one piece; annotations only carry short single lines.
+          {
+            echo '### Android build failure detail'
+            echo '```text'
+            cat "$GRADLE_ERROR_SUMMARY"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          tail -40 "$GRADLE_BUILD_LOG"
 
           if [ "$status" -ne 0 ]; then
             echo "::error title=Build::flutter build apk --release failed"
