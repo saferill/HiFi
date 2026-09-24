@@ -5,13 +5,19 @@ String? extractAudioStreamUrl(Map<String, dynamic> playerJson) {
   try {
     final streamingData = playerJson['streamingData'] as Map<String, dynamic>?;
     if (streamingData == null) {
-      developer.log('No streamingData found in player response', name: 'StreamParser');
+      developer.log(
+        'No streamingData found in player response',
+        name: 'StreamParser',
+      );
       return null;
     }
 
     final adaptiveFormats = streamingData['adaptiveFormats'] as List?;
     if (adaptiveFormats == null || adaptiveFormats.isEmpty) {
-      developer.log('No adaptiveFormats found in streamingData', name: 'StreamParser');
+      developer.log(
+        'No adaptiveFormats found in streamingData',
+        name: 'StreamParser',
+      );
       return null;
     }
 
@@ -25,7 +31,10 @@ String? extractAudioStreamUrl(Map<String, dynamic> playerJson) {
         .toList();
 
     if (audioFormats.isEmpty) {
-      developer.log('No audio formats found in adaptiveFormats', name: 'StreamParser');
+      developer.log(
+        'No audio formats found in adaptiveFormats',
+        name: 'StreamParser',
+      );
       return null;
     }
 
@@ -48,7 +57,8 @@ String? extractAudioStreamUrl(Map<String, dynamic> playerJson) {
     }
 
     // Check signatureCipher or cipher
-    final signatureCipher = (bestFormat['signatureCipher'] as String?) ??
+    final signatureCipher =
+        (bestFormat['signatureCipher'] as String?) ??
         (bestFormat['cipher'] as String?);
 
     if (signatureCipher != null && signatureCipher.isNotEmpty) {
@@ -61,7 +71,12 @@ String? extractAudioStreamUrl(Map<String, dynamic> playerJson) {
       return null;
     }
   } catch (e, stack) {
-    developer.log('Error extracting audio stream URL', name: 'StreamParser', error: e, stackTrace: stack);
+    developer.log(
+      'Error extracting audio stream URL',
+      name: 'StreamParser',
+      error: e,
+      stackTrace: stack,
+    );
   }
 
   return null;

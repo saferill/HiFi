@@ -1,0 +1,309 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Format, analyze & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      # No explicit `ref`: checkout picks the right commit per event. Pinning
+      # github.ref_name breaks pull_request runs, where it resolves to the
+      # synthetic `N/merge` ref that is not a branch.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # The project was created on the `master` channel (.metadata) and
+      # pubspec.yaml requires Dart >=3.14.0-201.0.dev, which no stable release
+      # ships yet — so CI has to track master too.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: master
+          cache: true
+
+      - name: Report toolchain
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # `dart format` is authoritative here: matching it by hand is impossible
+      # without the SDK, so CI formats and commits the result. Each file is
+      # formatted on its own so a file that cannot be parsed is reported by
+      # name instead of failing the whole run anonymously.
+      - name: Apply formatting
+        env:
+          BRANCH: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            out=$(dart format "$f" 2>&1) && continue
+            fail=1
+            msg=$(printf '%s' "$out" | head -c 400 | tr '\n' ' ' | sed 's/%/%25/g')
+            echo "::error file=$f,title=Unparseable Dart::$msg"
+          done < <(git ls-files '*.dart')
+
+          if [ "$fail" -ne 0 ]; then
+            echo "::error title=Formatting::some files could not be parsed"
+            exit 1
+          fi
+
+          if git diff --quiet; then
+            echo "Already format-clean."
+            exit 0
+          fi
+          git --no-pager diff --stat
+          if [ "$EVENT" = "pull_request" ]; then
+            echo "::error title=Formatting::files are not dart-format clean"
+            exit 1
+          fi
+          echo "::notice title=Formatting::dart format rewrote files; committing"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style: apply dart format"
+          git push origin "HEAD:${BRANCH}"
+
+      # Report each finding as a check-run annotation: workflow logs are served
+      # from a host that is not always reachable, but the annotations API is.
+      - name: Analyze
+        if: always()
+        run: |
+          set +e
+          dart analyze --format=machine . > /tmp/analyze.txt 2>&1
+          status=$?
+          set -e
+          cat /tmp/analyze.txt
+          python3 - <<'PY'
+          import os
+          errors = 0
+          path = '/tmp/analyze.txt'
+          if os.path.exists(path):
+              for line in open(path, encoding='utf-8', errors='replace'):
+                  parts = line.rstrip('\n').split('|')
+                  if len(parts) < 8 or parts[0] not in ('ERROR', 'WARNING', 'INFO'):
+                      continue
+                  severity, _, code, file, ln, col, _, message = parts[:8]
+                  message = (message.replace('%', '%25')
+                                    .replace('\r', ' ').replace('\n', ' '))
+                  print(f'::{severity.lower()} file={file},line={ln},col={col},'
+                        f'title={code}::{message}')
+                  if severity == 'ERROR':
+                      errors += 1
+          print(f'analyze-errors={errors}')
+          PY
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Analyze::dart analyze reported problems"
+            exit 1
+          fi
+
+      - name: Test
+        if: always()
+        run: |
+          set +e
+          flutter test --reporter json > /tmp/test.json 2>/tmp/test.err
+          status=$?
+          set -e
+          tail -40 /tmp/test.err || true
+          # A compile error aborts the run before any test event is emitted, so
+          # the stderr tail is the only trace of it — surface it as an
+          # annotation too, not just in the log.
+          if [ "$status" -ne 0 ] && [ -s /tmp/test.err ]; then
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              esc=$(printf '%s' "$line" | head -c 300 | sed 's/%/%25/g; s/\\r//g')
+              echo "::error title=flutter test stderr::$esc"
+            done < <(tail -12 /tmp/test.err)
+          fi
+          python3 - <<'PY'
+          import json, os
+
+          def esc(text):
+              return text.replace('%', '%25').replace('\r', ' ').replace('\n', ' ')[:400]
+
+          failures, prints, total = [], [], 0
+          path = '/tmp/test.json'
+          if os.path.exists(path):
+              for line in open(path, encoding='utf-8', errors='replace'):
+                  line = line.strip()
+                  if not line.startswith('{'):
+                      continue
+                  try:
+                      event = json.loads(line)
+                  except json.JSONDecodeError:
+                      continue
+                  t = event.get('type')
+                  if t == 'print':
+                      prints.append(esc(event.get('message') or ''))
+                  elif t == 'testStart':
+                      total += 1
+                  elif t == 'error':
+                      failures.append(esc(event.get('error') or ''))
+
+          for f in failures:
+              print(f'::error title=Test failure::{f}')
+
+          # The JSON reporter's `error` events carry only "Test failed. See
+          # exception logs above." — the assertion itself arrives as a `print`
+          # event, so replay the tail of those when something failed.
+          if failures:
+              for line in prints[-14:]:
+                  if line:
+                      print(f'::error title=test output::{line}')
+
+          print(f'tests={total} errors={len(failures)} prints={len(prints)}')
+          PY
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Tests::flutter test failed"
+            exit 1
+          fi
+
+  # Compiling lib/ is not the same as building the app. This job is the only
+  # place the Kotlin sources get compiled and the APK actually gets linked.
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: master
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx3g
+          GRADLE_BUILD_LOG: /tmp/build.log
+          GRADLE_ERROR_SUMMARY: /tmp/errors.txt
+        run: |
+          set +e
+          flutter build apk --release > "$GRADLE_BUILD_LOG" 2>&1
+          status=$?
+          set -e
+
+          python3 - <<'PY'
+          import os
+          import re
+
+          log_path = os.environ['GRADLE_BUILD_LOG']
+          summary_path = os.environ['GRADLE_ERROR_SUMMARY']
+
+          text = ''
+          if os.path.exists(log_path):
+              text = open(log_path, encoding='utf-8', errors='replace').read()
+          lines = text.splitlines()
+
+          # Kotlin and Dart both write `<severity>: <path>:<line>:<col> <msg>`.
+          location = re.compile(r'^([^\s]+?):(\d+):(\d+)\s+(.*)$')
+
+          details = []
+          for line in lines:
+              stripped = line.strip()
+              if not (stripped.startswith('e: ')
+                      or stripped.startswith('* What went wrong')
+                      or ' error: ' in stripped
+                      or stripped.startswith('> ')
+                      or stripped.startswith('Caused by')):
+                  continue
+              details.append(stripped)
+              body = stripped[3:] if stripped.startswith('e: ') else stripped
+              match = location.match(body)
+              shown = body[:320].replace('%', '%25')
+              if match:
+                  print('::error file=' + match.group(1) + ',line=' + match.group(2)
+                        + ',col=' + match.group(3) + ',title=Android build::' + shown)
+              else:
+                  print('::error title=Android build::' + shown)
+
+          # Whatever Gradle says after "* What went wrong:" is the cause, and it
+          # is the part worth reading in full — keep it beyond the annotation.
+          report = ['## Android build output', '', '```']
+          report += details[:120] if details else lines[-80:]
+          report.append('```')
+          open(summary_path, 'w', encoding='utf-8').write('\n'.join(report))
+
+          print('detail-lines=' + str(len(details)))
+          PY
+
+          # Full multi-line detail goes to the step summary, which the API can
+          # return in one piece; annotations only carry short single lines.
+          {
+            echo '### Android build failure detail'
+            echo '```text'
+            cat "$GRADLE_ERROR_SUMMARY"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          tail -40 "$GRADLE_BUILD_LOG"
+
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Build::flutter build apk --release failed"
+            exit 1
+          fi
+
+      - name: Prove the APK contains the native bridge
+        run: |
+          set -e
+          apk=$(ls build/app/outputs/flutter-apk/*.apk | head -1)
+          echo "apk=$apk"
+          ls -la "$apk"
+          unzip -l "$apk" | head -15
+
+          # The Kotlin plugin was missing once and the .kt files were silently
+          # dropped, so assert the classes actually made it into the dex rather
+          # than trusting that "the build passed".
+          missing=""
+          for class in 'com/hifi/app/MainActivity' 'com/hifi/app/StreamExtractor'; do
+            found=no
+            for entry in $(unzip -Z1 "$apk" | grep -E '^classes.*\.dex$'); do
+              if unzip -p "$apk" "$entry" | grep -aq "$class"; then
+                found=yes
+                break
+              fi
+            done
+            echo "$class -> $found"
+            [ "$found" = yes ] || missing="$missing $class"
+          done
+
+          if [ -n "$missing" ]; then
+            echo "::error title=APK contents::missing from dex:$missing"
+            exit 1
+          fi
+
+          # Sizes are a sanity check that the native extractor was linked in.
+          echo "dex entries:"
+          unzip -Z1 "$apk" | grep -E '^classes.*\.dex$' | wc -l
+
+      - name: Report APK
+        run: ls -la build/app/outputs/flutter-apk/
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: hifi-release-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 30
+

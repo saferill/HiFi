@@ -14,9 +14,10 @@ List<Song> parseSearchResults(Map<String, dynamic> rawJson) {
   }
 
   try {
-    final sections = (rawJson['contents']?['tabbedSearchResultsRenderer']?['tabs']
-            as List?)?[0]?['tabRenderer']?['content']?['sectionListRenderer']
-        ?['contents'] as List?;
+    final sections =
+        (rawJson['contents']?['tabbedSearchResultsRenderer']?['tabs']
+                as List?)?[0]?['tabRenderer']?['content']?['sectionListRenderer']?['contents']
+            as List?;
 
     if (sections == null) return songs;
 
@@ -48,7 +49,8 @@ List<Song> parseSearchResults(Map<String, dynamic> rawJson) {
 
       // 3. itemSectionRenderer (may contain direct list items or nested musicShelfRenderer)
       if (section.containsKey('itemSectionRenderer')) {
-        final itemSection = section['itemSectionRenderer'] as Map<String, dynamic>;
+        final itemSection =
+            section['itemSectionRenderer'] as Map<String, dynamic>;
         final innerContents = itemSection['contents'] as List?;
         if (innerContents != null) {
           for (final inner in innerContents) {
@@ -89,7 +91,8 @@ Song? _parseCardShelf(Map<String, dynamic> card) {
 
     String videoId = '';
     if (titleRuns?.isNotEmpty == true) {
-      videoId = titleRuns![0]['navigationEndpoint']?['watchEndpoint']?['videoId']
+      videoId =
+          titleRuns![0]['navigationEndpoint']?['watchEndpoint']?['videoId']
               as String? ??
           '';
     }
@@ -97,7 +100,8 @@ Song? _parseCardShelf(Map<String, dynamic> card) {
       final buttons = card['buttons'] as List?;
       if (buttons != null) {
         for (final btn in buttons) {
-          final cmd = btn['buttonRenderer']?['command'] ??
+          final cmd =
+              btn['buttonRenderer']?['command'] ??
               btn['buttonRenderer']?['navigationEndpoint'];
           final id = cmd?['watchEndpoint']?['videoId'] as String?;
           if (id != null && id.isNotEmpty) {
@@ -128,8 +132,9 @@ Song? _parseCardShelf(Map<String, dynamic> card) {
       }
     }
 
-    final thumbnails = card['thumbnail']?['musicThumbnailRenderer']?['thumbnail']
-        ?['thumbnails'] as List?;
+    final thumbnails =
+        card['thumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails']
+            as List?;
     final thumbnailUrl = (thumbnails != null && thumbnails.isNotEmpty)
         ? (thumbnails.last['url'] as String? ?? '')
         : '';
@@ -149,7 +154,8 @@ Song? _parseCardShelf(Map<String, dynamic> card) {
 
 Song? _parseListItem(Map<String, dynamic> item) {
   try {
-    final renderer = item['musicResponsiveListItemRenderer'] as Map<String, dynamic>? ??
+    final renderer =
+        item['musicResponsiveListItemRenderer'] as Map<String, dynamic>? ??
         (item.containsKey('flexColumns') ? item : null);
 
     if (renderer == null) return null;
@@ -158,21 +164,21 @@ Song? _parseListItem(Map<String, dynamic> item) {
     String videoId = renderer['playlistItemData']?['videoId'] as String? ?? '';
 
     if (videoId.isEmpty) {
-      videoId = renderer['navigationEndpoint']?['watchEndpoint']?['videoId']
+      videoId =
+          renderer['navigationEndpoint']?['watchEndpoint']?['videoId']
               as String? ??
           '';
     }
 
     if (videoId.isEmpty) {
-      final overlay = renderer['overlay']?['musicItemThumbnailOverlayRenderer']
-          ?['content']?['musicPlayButtonRenderer']?['playNavigationEndpoint']
-          ?['watchEndpoint'];
+      final overlay =
+          renderer['overlay']?['musicItemThumbnailOverlayRenderer']?['content']?['musicPlayButtonRenderer']?['playNavigationEndpoint']?['watchEndpoint'];
       videoId = overlay?['videoId'] as String? ?? '';
     }
 
     if (videoId.isEmpty) {
-      final doubleTap = renderer['doubleTapCommand']?['watchEndpoint']?['videoId']
-          as String?;
+      final doubleTap =
+          renderer['doubleTapCommand']?['watchEndpoint']?['videoId'] as String?;
       videoId = doubleTap ?? '';
     }
 
@@ -181,12 +187,14 @@ Song? _parseListItem(Map<String, dynamic> item) {
     if (flexColumns == null || flexColumns.isEmpty) return null;
 
     String title = '';
-    final titleRuns = flexColumns[0]?['musicResponsiveListItemFlexColumnRenderer']
-        ?['text']?['runs'] as List?;
+    final titleRuns =
+        flexColumns[0]?['musicResponsiveListItemFlexColumnRenderer']?['text']?['runs']
+            as List?;
     if (titleRuns != null && titleRuns.isNotEmpty) {
       title = titleRuns[0]['text'] as String? ?? '';
       if (videoId.isEmpty) {
-        videoId = titleRuns[0]['navigationEndpoint']?['watchEndpoint']?['videoId']
+        videoId =
+            titleRuns[0]['navigationEndpoint']?['watchEndpoint']?['videoId']
                 as String? ??
             '';
       }
@@ -196,13 +204,17 @@ Song? _parseListItem(Map<String, dynamic> item) {
     String? duration;
 
     for (var i = 1; i < flexColumns.length; i++) {
-      final runs = flexColumns[i]?['musicResponsiveListItemFlexColumnRenderer']
-          ?['text']?['runs'] as List?;
+      final runs =
+          flexColumns[i]?['musicResponsiveListItemFlexColumnRenderer']?['text']?['runs']
+              as List?;
       if (runs == null) continue;
 
       for (final run in runs) {
         final text = (run['text'] as String? ?? '').trim();
-        if (text.isEmpty || text == '•' || _isTypeBadge(text) || _isAudienceOrViews(text)) {
+        if (text.isEmpty ||
+            text == '•' ||
+            _isTypeBadge(text) ||
+            _isAudienceOrViews(text)) {
           continue;
         }
 
@@ -215,8 +227,9 @@ Song? _parseListItem(Map<String, dynamic> item) {
     }
 
     // 3. Extract thumbnail
-    final thumbnails = renderer['thumbnail']?['musicThumbnailRenderer']?['thumbnail']
-        ?['thumbnails'] as List?;
+    final thumbnails =
+        renderer['thumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails']
+            as List?;
     String thumbnailUrl = '';
     if (thumbnails != null && thumbnails.isNotEmpty) {
       thumbnailUrl = thumbnails.last['url'] as String? ?? '';

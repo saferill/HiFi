@@ -1,14 +1,53 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../../data/parser/radio_parser.dart';
 import '../../data/repositories/music_repository.dart';
 import '../../data/services/native_stream_service.dart';
-// ignore: unused_import
 import '../../data/services/stream_service.dart';
 import '../../domain/entities/song.dart';
 
+/// What happens when a track ends.
+enum PlaybackRepeat {
+  /// Advance to the next track, falling through to the radio when the queue
+  /// runs out.
+  off,
+
+  /// Advance, and wrap back to the first track at the end of the queue.
+  all,
+
+  /// Replay the current track forever.
+  one,
+}
+
+extension PlaybackRepeatLabel on PlaybackRepeat {
+  String get label => switch (this) {
+    PlaybackRepeat.off => 'Repeat off',
+    PlaybackRepeat.all => 'Repeat queue',
+    PlaybackRepeat.one => 'Repeat track',
+  };
+}
+
 class PlayerState {
+  const PlayerState({
+    this.currentSong,
+    this.queue = const <Song>[],
+    this.currentIndex = -1,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
+    this.isPlaying = false,
+    this.isLoading = false,
+    this.isShuffleEnabled = false,
+    this.isRadioEnabled = true,
+    this.repeatMode = PlaybackRepeat.off,
+    this.isLoadingMoreQueue = false,
+    this.continuationToken,
+    this.errorMessage,
+  });
+
   final Song? currentSong;
   final List<Song> queue;
   final int currentIndex;
@@ -18,24 +57,18 @@ class PlayerState {
   final bool isLoading;
   final bool isShuffleEnabled;
   final bool isRadioEnabled;
+  final PlaybackRepeat repeatMode;
   final bool isLoadingMoreQueue;
   final String? continuationToken;
   final String? errorMessage;
 
-  const PlayerState({
-    this.currentSong,
-    this.queue = const [],
-    this.currentIndex = -1,
-    this.position = Duration.zero,
-    this.duration = Duration.zero,
-    this.isPlaying = false,
-    this.isLoading = false,
-    this.isShuffleEnabled = false,
-    this.isRadioEnabled = true,
-    this.isLoadingMoreQueue = false,
-    this.continuationToken,
-    this.errorMessage,
-  });
+  /// Tracks left after the current one.
+  int get songsRemaining =>
+      currentIndex < 0 ? 0 : queue.length - 1 - currentIndex;
+
+  bool get hasPrevious => currentIndex > 0;
+
+  bool get hasNext => currentIndex + 1 < queue.length || isRadioEnabled;
 
   PlayerState copyWith({
     Song? currentSong,
@@ -47,6 +80,7 @@ class PlayerState {
     bool? isLoading,
     bool? isShuffleEnabled,
     bool? isRadioEnabled,
+    PlaybackRepeat? repeatMode,
     bool? isLoadingMoreQueue,
     String? continuationToken,
     String? errorMessage,
@@ -63,6 +97,7 @@ class PlayerState {
       isLoading: isLoading ?? this.isLoading,
       isShuffleEnabled: isShuffleEnabled ?? this.isShuffleEnabled,
       isRadioEnabled: isRadioEnabled ?? this.isRadioEnabled,
+      repeatMode: repeatMode ?? this.repeatMode,
       isLoadingMoreQueue: isLoadingMoreQueue ?? this.isLoadingMoreQueue,
       continuationToken: clearContinuation
           ? null
@@ -76,54 +111,68 @@ final playerControllerProvider =
     NotifierProvider<PlayerController, PlayerState>(PlayerController.new);
 
 class PlayerController extends Notifier<PlayerState> {
+  static const String _logName = 'PlayerController';
+
+  /// How many upcoming tracks may remain before the radio tops the queue up.
+  static const int _radioRefillThreshold = 4;
+
   late final AudioPlayer _audioPlayer;
-  StreamSubscription<dynamic>? _playerStateSub;
-  StreamSubscription<dynamic>? _positionSub;
-  StreamSubscription<dynamic>? _durationSub;
+  final List<StreamSubscription<dynamic>> _subscriptions =
+      <StreamSubscription<dynamic>>[];
+
+  /// Incremented for every [playSong]. A response that arrives after a newer
+  /// request has started is discarded, so double-tapping a track can no longer
+  /// leave the audio on the first one while the UI shows the second.
+  int _loadToken = 0;
 
   @override
   PlayerState build() {
     _audioPlayer = AudioPlayer();
 
-    _playerStateSub = _audioPlayer.playerStateStream.listen((playerState) {
-      final isPlaying = playerState.playing;
-      final processingState = playerState.processingState;
-      final isBuffering = processingState == ProcessingState.buffering ||
-          processingState == ProcessingState.loading;
+    _subscriptions.add(
+      _audioPlayer.playerStateStream.listen((playerState) {
+        final processingState = playerState.processingState;
+        final isBuffering =
+            processingState == ProcessingState.buffering ||
+            processingState == ProcessingState.loading;
 
-      state = state.copyWith(
-        isPlaying: isPlaying && processingState != ProcessingState.completed,
-        isLoading: isBuffering,
-      );
-
-      // Auto-next when song playback completes
-      if (processingState == ProcessingState.completed) {
-        developer.log(
-          'Song completed, auto-playing next...',
-          name: 'PlayerController',
+        state = state.copyWith(
+          isPlaying:
+              playerState.playing &&
+              processingState != ProcessingState.completed,
+          isLoading: isBuffering,
         );
-        playNext();
-      }
-    });
 
-    _positionSub = _audioPlayer.positionStream.listen((pos) {
-      state = state.copyWith(position: pos);
-    });
+        if (processingState == ProcessingState.completed) {
+          developer.log('Track completed, advancing', name: _logName);
+          playNext(auto: true);
+        }
+      }),
+    );
 
-    _durationSub = _audioPlayer.durationStream.listen((dur) {
-      state = state.copyWith(duration: dur ?? Duration.zero);
-    });
+    _subscriptions.add(
+      _audioPlayer.positionStream.listen((pos) {
+        state = state.copyWith(position: pos);
+      }),
+    );
+
+    _subscriptions.add(
+      _audioPlayer.durationStream.listen((dur) {
+        state = state.copyWith(duration: dur ?? Duration.zero);
+      }),
+    );
 
     ref.onDispose(() {
-      _playerStateSub?.cancel();
-      _positionSub?.cancel();
-      _durationSub?.cancel();
+      for (final subscription in _subscriptions) {
+        subscription.cancel();
+      }
       _audioPlayer.dispose();
     });
 
     return const PlayerState();
   }
 
+  /// Replaces the queue and starts playing the track at [startIndex].
   void playQueue(List<Song> songs, int startIndex) {
     if (songs.isEmpty || startIndex < 0 || startIndex >= songs.length) return;
 
@@ -137,27 +186,18 @@ class PlayerController extends Notifier<PlayerState> {
   }
 
   Future<void> playSong(Song song, {int? index}) async {
-    final existingIndex = state.queue.indexWhere((s) => s.videoId == song.videoId);
-    final newIndex = index ??
+    final existingIndex = state.queue.indexWhere(
+      (s) => s.videoId == song.videoId,
+    );
+    final newIndex =
+        index ??
         (existingIndex != -1
             ? existingIndex
-            : (state.queue.isNotEmpty ? state.queue.length : 0));
+            : (state.queue.isEmpty ? 0 : state.queue.length));
 
     final updatedQueue = state.queue.isEmpty
-        ? [song]
-        : (existingIndex == -1 ? [...state.queue, song] : state.queue);
-
-    // ignore: avoid_print
-    print('[PlayerController] playSong START');
-    developer.log('playSong START', name: 'PlayerController');
-    // ignore: avoid_print
-    print(
-      '[PlayerController] playSong requested: ${song.title} (${song.videoId})',
-    );
-    developer.log(
-      'playSong requested: ${song.title} (${song.videoId})',
-      name: 'PlayerController',
-    );
+        ? <Song>[song]
+        : (existingIndex == -1 ? <Song>[...state.queue, song] : state.queue);
 
     state = state.copyWith(
       currentSong: song,
@@ -169,48 +209,33 @@ class PlayerController extends Notifier<PlayerState> {
       duration: Duration.zero,
     );
 
-    try {
-      final nativeStreamService = ref.read(nativeStreamServiceProvider);
-      final streamUrl =
-          await nativeStreamService.getAudioStreamUrl(song.videoId);
+    final token = ++_loadToken;
+    developer.log('Loading ${song.title} (${song.videoId})', name: _logName);
 
-      if (streamUrl == null || streamUrl.isEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-          isPlaying: false,
-          errorMessage: 'Gagal mendapatkan audio stream untuk "${song.title}"',
-        );
-        // ignore: avoid_print
-        print(
-          '[PlayerController] Failed to play ${song.title}: streamUrl is null',
-        );
+    try {
+      final streamUrl = await _resolveStreamUrl(song.videoId);
+      if (token != _loadToken) {
         developer.log(
-          'Failed to play ${song.title}: streamUrl is null',
-          name: 'PlayerController',
+          'Discarding stale load for ${song.videoId}',
+          name: _logName,
         );
         return;
       }
 
-      // ignore: avoid_print
-      print(
-        '[PlayerController] Loading audio stream via just_audio: $streamUrl',
-      );
-      developer.log(
-        'Loading audio stream via just_audio: $streamUrl',
-        name: 'PlayerController',
-      );
+      if (streamUrl == null || streamUrl.isEmpty) {
+        _fail(song, 'Gagal mendapatkan audio stream untuk "${song.title}"');
+        return;
+      }
+
       await _audioPlayer.setUrl(
         streamUrl,
-        headers: {
-          'User-Agent':
-              'com.google.android.apps.youtube.music/7.16.53 (Linux; U; Android 11) gzip',
+        headers: <String, String>{
+          'User-Agent': 'com.google.android.apps.youtube.music/7.27.52 (Linux; U; Android 11) gzip',
         },
       );
-      // ignore: avoid_print
-      print('[PlayerController] setUrl completed, calling play()');
+      if (token != _loadToken) return;
+
       await _audioPlayer.play();
-      // ignore: avoid_print
-      print('[PlayerController] play() completed');
 
       state = state.copyWith(
         isLoading: false,
@@ -218,58 +243,99 @@ class PlayerController extends Notifier<PlayerState> {
         clearError: true,
       );
 
-      // Trigger infinite radio fetch in background if near end of queue
-      _checkAndFetchRadioQueue();
+      // Top the queue up before it runs dry.
+      unawaited(_checkAndFetchRadioQueue());
     } catch (e, stack) {
-      // ignore: avoid_print
-      print('[PlayerController] Error playing song ${song.title}: $e');
       developer.log(
-        'Error playing song ${song.title}',
-        name: 'PlayerController',
+        'Playback failed for ${song.title}',
+        name: _logName,
         error: e,
         stackTrace: stack,
       );
-      state = state.copyWith(
-        isLoading: false,
-        isPlaying: false,
-        errorMessage: 'Playback error: $e',
-      );
-    } finally {
-      // ignore: avoid_print
-      print('[PlayerController] playSong END, isPlaying=${state.isPlaying}');
-      developer.log(
-        'playSong END, isPlaying=${state.isPlaying}',
-        name: 'PlayerController',
-      );
+      if (token == _loadToken) {
+        _fail(song, 'Playback error: $e');
+      }
     }
   }
 
-  void playNext() {
+  void _fail(Song song, String message) {
+    state = state.copyWith(
+      isLoading: false,
+      isPlaying: false,
+      errorMessage: message,
+    );
+    developer.log(message, name: _logName, error: song.videoId);
+  }
+
+  /// Resolves a playable URL, preferring the native extractor and falling back
+  /// to the Dart one.
+  ///
+  /// The two used to be competing implementations with only the native one
+  /// wired up, so the app had no audio at all on platforms where the
+  /// `com.hifi.app/stream` channel is not implemented. Trying both in order
+  /// mirrors how SimpMusic walks its extractor chain.
+  Future<String?> _resolveStreamUrl(String videoId) async {
+    final native = ref.read(nativeStreamServiceProvider);
+    final nativeUrl = await native.getAudioStreamUrl(videoId);
+    if (nativeUrl != null && nativeUrl.isNotEmpty) {
+      developer.log('Stream via native extractor', name: _logName);
+      return nativeUrl;
+    }
+
+    developer.log(
+      'Native extractor returned nothing for $videoId, falling back',
+      name: _logName,
+    );
+    return ref.read(streamServiceProvider).getAudioStreamUrl(videoId);
+  }
+
+  /// Advances the queue.
+  ///
+  /// [auto] is set when the track ended on its own, which is what makes
+  /// [PlaybackRepeat.one] meaningful — a manual "next" should still move on.
+  void playNext({bool auto = false}) {
+    if (auto && state.repeatMode == PlaybackRepeat.one) {
+      unawaited(seek(Duration.zero));
+      unawaited(_audioPlayer.play());
+      return;
+    }
+
     final nextIndex = state.currentIndex + 1;
     if (nextIndex < state.queue.length) {
-      state = state.copyWith(currentIndex: nextIndex);
       playSong(state.queue[nextIndex], index: nextIndex);
-    } else if (state.isRadioEnabled && state.currentSong != null) {
-      // Queue exhausted: immediately fetch more radio tracks
-      _fetchRadioQueueAndPlayNext();
-    } else {
-      developer.log('End of queue reached', name: 'PlayerController');
+      return;
     }
+
+    if (state.repeatMode == PlaybackRepeat.all && state.queue.isNotEmpty) {
+      playSong(state.queue.first, index: 0);
+      return;
+    }
+
+    if (state.isRadioEnabled && state.currentSong != null) {
+      // Queue exhausted: fetch more before the silence becomes audible.
+      unawaited(_fetchRadioQueueAndPlayNext());
+      return;
+    }
+
+    developer.log('End of queue reached', name: _logName);
   }
 
   void playPrevious() {
-    // If played more than 3 seconds, restart current track
+    // Restart the track unless we are already at its start.
     if (state.position.inSeconds > 3) {
-      seek(Duration.zero);
+      unawaited(seek(Duration.zero));
       return;
     }
 
     final prevIndex = state.currentIndex - 1;
     if (prevIndex >= 0 && prevIndex < state.queue.length) {
-      state = state.copyWith(currentIndex: prevIndex);
       playSong(state.queue[prevIndex], index: prevIndex);
+    } else if (state.repeatMode == PlaybackRepeat.all &&
+        state.queue.isNotEmpty) {
+      final lastIndex = state.queue.length - 1;
+      playSong(state.queue[lastIndex], index: lastIndex);
     } else {
-      seek(Duration.zero);
+      unawaited(seek(Duration.zero));
     }
   }
 
@@ -277,122 +343,129 @@ class PlayerController extends Notifier<PlayerState> {
     final newShuffleState = !state.isShuffleEnabled;
 
     if (newShuffleState && state.queue.isNotEmpty && state.currentIndex >= 0) {
-      // Shuffle only upcoming tracks after currentIndex
+      // Shuffle only what has not been played yet, so the current track stays
+      // put and the history is preserved.
       final played = state.queue.sublist(0, state.currentIndex + 1);
-      final upcoming = state.queue.sublist(state.currentIndex + 1).toList()..shuffle();
+      final upcoming = state.queue.sublist(state.currentIndex + 1).toList()
+        ..shuffle();
 
       state = state.copyWith(
         isShuffleEnabled: true,
-        queue: [...played, ...upcoming],
+        queue: <Song>[...played, ...upcoming],
       );
-      developer.log('Queue shuffled for upcoming songs', name: 'PlayerController');
-    } else {
-      state = state.copyWith(isShuffleEnabled: newShuffleState);
+      developer.log('Shuffled upcoming tracks', name: _logName);
+      return;
     }
+
+    state = state.copyWith(isShuffleEnabled: newShuffleState);
+  }
+
+  /// Cycles off → all → one → off.
+  void cycleRepeatMode() {
+    final next = switch (state.repeatMode) {
+      PlaybackRepeat.off => PlaybackRepeat.all,
+      PlaybackRepeat.all => PlaybackRepeat.one,
+      PlaybackRepeat.one => PlaybackRepeat.off,
+    };
+    state = state.copyWith(repeatMode: next);
+    developer.log('Repeat mode: ${next.label}', name: _logName);
   }
 
   void toggleRadioMode() {
     final newRadioState = !state.isRadioEnabled;
     state = state.copyWith(isRadioEnabled: newRadioState);
     if (newRadioState) {
-      _checkAndFetchRadioQueue();
+      unawaited(_checkAndFetchRadioQueue());
     }
   }
 
+  /// Appends radio tracks when the queue is running low. Never starts playback.
   Future<void> _checkAndFetchRadioQueue() async {
     if (!state.isRadioEnabled || state.isLoadingMoreQueue) return;
-    if (state.currentSong == null) return;
-
-    // Trigger when queue has 4 or fewer songs remaining
-    final songsRemaining = state.queue.length - 1 - state.currentIndex;
-    if (songsRemaining > 4) return;
+    final current = state.currentSong;
+    if (current == null) return;
+    if (state.songsRemaining > _radioRefillThreshold) return;
 
     state = state.copyWith(isLoadingMoreQueue: true);
 
     try {
-      developer.log(
-        'Fetching radio tracks for ${state.currentSong!.title}...',
-        name: 'PlayerController',
-      );
-      final repository = ref.read(musicRepositoryProvider);
-      final result = await repository.getRadioTracks(
-        state.currentSong!.videoId,
-        continuation: state.continuationToken,
-      );
-
-      if (result.songs.isNotEmpty) {
-        final existingIds = state.queue.map((s) => s.videoId).toSet();
-        var newSongs = result.songs
-            .where((s) => !existingIds.contains(s.videoId))
-            .toList();
-
-        if (state.isShuffleEnabled) {
-          newSongs.shuffle();
-        }
-
-        if (newSongs.isNotEmpty) {
-          state = state.copyWith(
-            queue: [...state.queue, ...newSongs],
-            continuationToken: result.continuationToken,
-            isLoadingMoreQueue: false,
+      final result = await ref
+          .read(musicRepositoryProvider)
+          .getRadioTracks(
+            current.videoId,
+            continuation: state.continuationToken,
           );
-          developer.log(
-            'Appended ${newSongs.length} radio songs to queue. Total queue: ${state.queue.length}',
-            name: 'PlayerController',
-          );
-          return;
-        }
-      }
-    } catch (e) {
+      _appendRadioSongs(result);
+    } catch (e, stack) {
       developer.log(
-        'Failed to fetch radio tracks: $e',
-        name: 'PlayerController',
+        'Failed to fetch radio tracks',
+        name: _logName,
         error: e,
+        stackTrace: stack,
       );
     } finally {
       state = state.copyWith(isLoadingMoreQueue: false);
     }
   }
 
+  /// Fetches radio tracks and immediately plays the first new one.
   Future<void> _fetchRadioQueueAndPlayNext() async {
-    if (state.isLoadingMoreQueue || state.currentSong == null) return;
+    if (state.isLoadingMoreQueue) return;
+    final current = state.currentSong;
+    if (current == null) return;
+
     state = state.copyWith(isLoadingMoreQueue: true);
 
     try {
-      final repository = ref.read(musicRepositoryProvider);
-      final result = await repository.getRadioTracks(
-        state.currentSong!.videoId,
-        continuation: state.continuationToken,
-      );
+      final result = await ref
+          .read(musicRepositoryProvider)
+          .getRadioTracks(
+            current.videoId,
+            continuation: state.continuationToken,
+          );
+      final appended = _appendRadioSongs(result);
 
-      final existingIds = state.queue.map((s) => s.videoId).toSet();
-      var newSongs =
-          result.songs.where((s) => !existingIds.contains(s.videoId)).toList();
-
-      if (state.isShuffleEnabled) {
-        newSongs.shuffle();
+      if (appended > 0) {
+        final nextIndex = state.queue.length - appended;
+        playSong(state.queue[nextIndex], index: nextIndex);
       }
-
-      if (newSongs.isNotEmpty) {
-        final nextIndex = state.queue.length;
-        state = state.copyWith(
-          queue: [...state.queue, ...newSongs],
-          currentIndex: nextIndex,
-          continuationToken: result.continuationToken,
-          isLoadingMoreQueue: false,
-        );
-        playSong(newSongs.first, index: nextIndex);
-        return;
-      }
-    } catch (e) {
+    } catch (e, stack) {
       developer.log(
-        'Failed to fetch radio queue on exhaustion: $e',
-        name: 'PlayerController',
+        'Failed to extend the radio queue',
+        name: _logName,
         error: e,
+        stackTrace: stack,
       );
     } finally {
       state = state.copyWith(isLoadingMoreQueue: false);
     }
+  }
+
+  /// Adds the tracks from [result] that are not already queued.
+  ///
+  /// Returns how many were added so the caller knows where they start.
+  int _appendRadioSongs(RadioResult result) {
+    final existingIds = state.queue.map((s) => s.videoId).toSet();
+    final newSongs = result.songs
+        .where((s) => !existingIds.contains(s.videoId))
+        .toList();
+
+    if (newSongs.isEmpty) return 0;
+
+    if (state.isShuffleEnabled) {
+      newSongs.shuffle();
+    }
+
+    state = state.copyWith(
+      queue: <Song>[...state.queue, ...newSongs],
+      continuationToken: result.continuationToken,
+    );
+    developer.log(
+      'Appended ${newSongs.length} radio tracks, queue is now '
+      '${state.queue.length}',
+      name: _logName,
+    );
+    return newSongs.length;
   }
 
   Future<void> seek(Duration position) async {

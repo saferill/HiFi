@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,10 +16,9 @@ class NativeStreamService {
         'NativeStreamService.getAudioStreamUrl for $videoId',
         name: 'NativeStreamService',
       );
-      final result = await _channel.invokeMethod<String>(
-        'getStreamUrl',
-        {'videoId': videoId},
-      );
+      final result = await _channel.invokeMethod<String>('getStreamUrl', {
+        'videoId': videoId,
+      });
       developer.log(
         'NativeStreamService resolved URL for $videoId: $result',
         name: 'NativeStreamService',

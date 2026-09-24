@@ -1,64 +1,80 @@
-// ignore_for_file: avoid_print
-import 'package:app/data/network/innertube_client.dart';
 import 'package:app/data/parser/stream_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// `extractAudioStreamUrl` is the deprecated InnerTube-based extractor kept
+/// around for `player` responses that still carry a plain `url`. These cases
+/// pin the behaviour the repository relies on when it falls back to it.
 void main() {
-  test('Test getPlayerInfo and stream parsing across multiple videoIds', () async {
-    final client = InnertubeClient();
+  Map<String, dynamic> playerWith(List<Map<String, dynamic>> formats) =>
+      <String, dynamic>{
+        'streamingData': <String, dynamic>{'adaptiveFormats': formats},
+      };
 
-    // Test multiple popular song videoIds
-    final testVideoIds = [
-      {'id': 'TO-_3tck2tg', 'title': 'Imagine Dragons - Bones'},
-      {'id': 'JGwWNGJdvx8', 'title': 'Ed Sheeran - Shape of You'},
-      {'id': 'YQHsXMglC9A', 'title': 'Adele - Hello'},
-      {'id': 'fJ9rUzIMcZQ', 'title': 'Queen - Bohemian Rhapsody'},
-      {'id': 'kJQP7kiw5Fk', 'title': 'Luis Fonsi - Despacito'},
-    ];
+  Map<String, dynamic> audioFormat({
+    required int bitrate,
+    String? url,
+    String? cipher,
+    String mimeType = 'audio/webm; codecs="opus"',
+  }) {
+    return <String, dynamic>{
+      'mimeType': mimeType,
+      'bitrate': bitrate,
+      if (url != null) 'url': url,
+      if (cipher != null) 'signatureCipher': cipher,
+    };
+  }
 
-    var directUrlCount = 0;
-    var cipherCount = 0;
+  group('extractAudioStreamUrl', () {
+    test('picks the highest-bitrate audio format', () {
+      final url = extractAudioStreamUrl(
+        playerWith(<Map<String, dynamic>>[
+          audioFormat(bitrate: 64000, url: 'https://example.com/low'),
+          audioFormat(bitrate: 256000, url: 'https://example.com/high'),
+          audioFormat(bitrate: 128000, url: 'https://example.com/mid'),
+          // A video-only format must never win, however high its bitrate.
+          <String, dynamic>{
+            'mimeType': 'video/mp4',
+            'bitrate': 4000000,
+            'url': 'https://example.com/video',
+          },
+        ]),
+      );
 
-    for (final item in testVideoIds) {
-      final videoId = item['id']!;
-      final title = item['title']!;
+      expect(url, 'https://example.com/high');
+    });
 
-      print('\nTesting player info for: $title ($videoId)...');
-      final playerJson = await client.getPlayerInfo(videoId);
+    test('ignores non-audio formats entirely', () {
+      final url = extractAudioStreamUrl(
+        playerWith(<Map<String, dynamic>>[
+          <String, dynamic>{
+            'mimeType': 'video/mp4',
+            'bitrate': 4000000,
+            'url': 'https://example.com/video',
+          },
+        ]),
+      );
 
-      final streamingData = playerJson['streamingData'] as Map<String, dynamic>?;
-      print('  streamingData present: ${streamingData != null}');
-      if (streamingData != null) {
-        final formats = streamingData['adaptiveFormats'] as List? ?? [];
-        print('  adaptiveFormats count: ${formats.length}');
+      expect(url, isNull);
+    });
 
-        final audioFormats = formats.whereType<Map<String, dynamic>>().where((f) {
-          final mime = (f['mimeType'] as String? ?? '').toLowerCase();
-          return mime.contains('audio/');
-        }).toList();
+    test('returns null when the format is ciphered, not a broken URL', () {
+      final url = extractAudioStreamUrl(
+        playerWith(<Map<String, dynamic>>[
+          audioFormat(bitrate: 256000, cipher: 's=abc&url=https%3A%2F%2Fex'),
+        ]),
+      );
 
-        print('  audioFormats count: ${audioFormats.length}');
-        for (var i = 0; i < audioFormats.length && i < 2; i++) {
-          final af = audioFormats[i];
-          final hasUrl = af.containsKey('url') && (af['url'] as String? ?? '').isNotEmpty;
-          final hasCipher = af.containsKey('signatureCipher') || af.containsKey('cipher');
-          print('    format $i: mime=${af['mimeType']}, bitrate=${af['bitrate']}, hasDirectUrl=$hasUrl, hasCipher=$hasCipher');
-        }
-      }
+      expect(url, isNull);
+    });
 
-      final streamUrl = extractAudioStreamUrl(playerJson);
-      if (streamUrl != null && streamUrl.isNotEmpty) {
-        directUrlCount++;
-        print('  -> SUCCESS: Direct audio URL extracted: ${streamUrl.substring(0, 50)}...');
-      } else {
-        cipherCount++;
-        print('  -> NEEDS CIPHER OR NULL');
-      }
-    }
-
-    print('\n=== SUMMARY OF STREAM PARSER TEST ===');
-    print('Total tested: ${testVideoIds.length}');
-    print('Direct URLs: $directUrlCount');
-    print('Cipher required: $cipherCount');
+    test('returns null for a payload with no streaming data', () {
+      expect(extractAudioStreamUrl(<String, dynamic>{}), isNull);
+      expect(
+        extractAudioStreamUrl(<String, dynamic>{
+          'streamingData': <String, dynamic>{'adaptiveFormats': <dynamic>[]},
+        }),
+        isNull,
+      );
+    });
   });
 }

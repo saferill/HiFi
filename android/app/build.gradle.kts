@@ -1,5 +1,10 @@
 plugins {
     id("com.android.application")
+    // Kotlin sources under src/main/kotlin (MainActivity, StreamExtractor) are
+    // only compiled when this is applied. settings.gradle.kts declares the
+    // plugin with `apply false`, so without this line the Kotlin files are
+    // silently ignored and the com.hifi.app/stream channel has no handler.
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -34,6 +39,12 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 minifies the release build. NewPipeExtractor and OkHttp need
+            // the keep rules in app/proguard-rules.pro or the build fails.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
