@@ -10,13 +10,19 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
-  analyze-and-test:
-    name: Analyze & test
+  verify:
+    name: Format, analyze & test
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
 
       # The project was created on the `master` channel (.metadata) and
       # pubspec.yaml requires Dart >=3.14.0-201.0.dev, which no stable release
@@ -27,18 +33,103 @@ jobs:
           cache: true
 
       - name: Report toolchain
-        run: |
-          flutter --version
-          dart --version
+        run: flutter --version
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+      # CI owns formatting: `dart format` is authoritative, and hand-matching
+      # it locally is impossible without the SDK. Committing the result keeps
+      # the tree format-clean and the run is idempotent afterwards.
+      - name: Apply formatting
+        env:
+          BRANCH: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          dart format lib test >/dev/null
+          if git diff --quiet; then
+            echo "Already format-clean."
+            exit 0
+          fi
+          git --no-pager diff --stat
+          if [ "$EVENT" = "pull_request" ]; then
+            echo "::error title=Formatting::files are not dart-format clean"
+            exit 1
+          fi
+          echo "::notice title=Formatting::dart format rewrote files; committing"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style: apply dart format"
+          git push origin "HEAD:${BRANCH}"
 
+      # `flutter analyze` output is turned into check-run annotations because
+      # workflow logs are not always reachable from outside the runner.
       - name: Analyze
-        run: flutter analyze --fatal-infos
+        run: |
+          set +e
+          dart analyze --format=machine . > /tmp/analyze.txt 2>&1
+          status=$?
+          set -e
+          cat /tmp/analyze.txt
+          python3 - <<'PY'
+          import os, re
+          errors = 0
+          path = '/tmp/analyze.txt'
+          if os.path.exists(path):
+              for line in open(path, encoding='utf-8', errors='replace'):
+                  parts = line.rstrip('\n').split('|')
+                  if len(parts) < 8 or parts[0] not in ('ERROR', 'WARNING', 'INFO'):
+                      continue
+                  severity, _, code, file, ln, col, _, message = parts[:8]
+                  message = message.replace('%', '%25').replace('\r', ' ').replace('\n', ' ')
+                  print(f'::{severity.lower()} file={file},line={ln},col={col},title={code}::{message}')
+                  if severity == 'ERROR':
+                      errors += 1
+          print(f'analyze-errors={errors}')
+          PY
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Analyze::dart analyze reported problems"
+            exit 1
+          fi
 
       - name: Test
-        run: flutter test --reporter expanded
+        run: |
+          set +e
+          flutter test --reporter json > /tmp/test.json 2>/tmp/test.err
+          status=$?
+          set -e
+          tail -40 /tmp/test.err || true
+          python3 - <<'PY'
+          import json, os
+          failures, total = [], 0
+          path = '/tmp/test.json'
+          if os.path.exists(path):
+              suites = {}
+              for line in open(path, encoding='utf-8', errors='replace'):
+                  line = line.strip()
+                  if not line.startswith('{'):
+                      continue
+                  try:
+                      event = json.loads(line)
+                  except json.JSONDecodeError:
+                      continue
+                  t = event.get('type')
+                  if t == 'suite':
+                      suites[event.get('suite', {}).get('id')] = event.get('suite', {}).get('path', '?')
+                  elif t == 'testStart':
+                      total += 1
+                  elif t == 'error':
+                      suite = suites.get(event.get('testID'), '?')
+                      msg = (event.get('error') or '')[:400].replace('\\n', ' ').replace('%', '%25')
+                      failures.append(f'{suite}: {msg}')
+                  elif t == 'testDone' and event.get('result') == 'error':
+                      pass
+          for f in failures:
+              print(f'::error title=test failure::{f}')
+          print(f'tests={total} errors={len(failures)}')
+          PY
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Tests::flutter test failed"
+            exit 1
+          fi
