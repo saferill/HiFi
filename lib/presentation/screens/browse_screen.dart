@@ -329,7 +329,11 @@ class _Card extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Artwork(url: imageUrl, size: _cardArtSize, radius: circular ? 70 : 12),
+            Artwork(
+              url: imageUrl,
+              size: _cardArtSize,
+              radius: circular ? 70 : 12,
+            ),
             const SizedBox(height: 8),
             // The labels take whatever height is left, so a two-line title
             // cannot push the column past the carousel's fixed height.
