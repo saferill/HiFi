@@ -56,48 +56,27 @@ void main() {
         ]),
       );
 
-      final streamingData =
-          playerJson['streamingData'] as Map<String, dynamic>?;
-      print('  streamingData present: ${streamingData != null}');
-      if (streamingData != null) {
-        final formats = streamingData['adaptiveFormats'] as List? ?? [];
-        print('  adaptiveFormats count: ${formats.length}');
+      expect(url, isNull);
+    });
 
-        final audioFormats = formats.whereType<Map<String, dynamic>>().where((
-          f,
-        ) {
-          final mime = (f['mimeType'] as String? ?? '').toLowerCase();
-          return mime.contains('audio/');
-        }).toList();
+    test('returns null when the format is ciphered, not a broken URL', () {
+      final url = extractAudioStreamUrl(
+        playerWith(<Map<String, dynamic>>[
+          audioFormat(bitrate: 256000, cipher: 's=abc&url=https%3A%2F%2Fex'),
+        ]),
+      );
 
-        print('  audioFormats count: ${audioFormats.length}');
-        for (var i = 0; i < audioFormats.length && i < 2; i++) {
-          final af = audioFormats[i];
-          final hasUrl =
-              af.containsKey('url') && (af['url'] as String? ?? '').isNotEmpty;
-          final hasCipher =
-              af.containsKey('signatureCipher') || af.containsKey('cipher');
-          print(
-            '    format $i: mime=${af['mimeType']}, bitrate=${af['bitrate']}, hasDirectUrl=$hasUrl, hasCipher=$hasCipher',
-          );
-        }
-      }
+      expect(url, isNull);
+    });
 
-      final streamUrl = extractAudioStreamUrl(playerJson);
-      if (streamUrl != null && streamUrl.isNotEmpty) {
-        directUrlCount++;
-        print(
-          '  -> SUCCESS: Direct audio URL extracted: ${streamUrl.substring(0, 50)}...',
-        );
-      } else {
-        cipherCount++;
-        print('  -> NEEDS CIPHER OR NULL');
-      }
-    }
-
-    print('\n=== SUMMARY OF STREAM PARSER TEST ===');
-    print('Total tested: ${testVideoIds.length}');
-    print('Direct URLs: $directUrlCount');
-    print('Cipher required: $cipherCount');
+    test('returns null for a payload with no streaming data', () {
+      expect(extractAudioStreamUrl(<String, dynamic>{}), isNull);
+      expect(
+        extractAudioStreamUrl(<String, dynamic>{
+          'streamingData': <String, dynamic>{'adaptiveFormats': <dynamic>[]},
+        }),
+        isNull,
+      );
+    });
   });
 }

@@ -38,15 +38,28 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # CI owns formatting: `dart format` is authoritative, and hand-matching
-      # it locally is impossible without the SDK. Committing the result keeps
-      # the tree format-clean and the run is idempotent afterwards.
+      # `dart format` is authoritative here: matching it by hand is impossible
+      # without the SDK, so CI formats and commits the result. Each file is
+      # formatted on its own so a file that cannot be parsed is reported by
+      # name instead of failing the whole run anonymously.
       - name: Apply formatting
         env:
           BRANCH: ${{ github.ref_name }}
           EVENT: ${{ github.event_name }}
         run: |
-          dart format lib test >/dev/null
+          fail=0
+          while IFS= read -r f; do
+            out=$(dart format "$f" 2>&1) && continue
+            fail=1
+            msg=$(printf '%s' "$out" | head -c 400 | tr '\n' ' ' | sed 's/%/%25/g')
+            echo "::error file=$f,title=Unparseable Dart::$msg"
+          done < <(git ls-files '*.dart')
+
+          if [ "$fail" -ne 0 ]; then
+            echo "::error title=Formatting::some files could not be parsed"
+            exit 1
+          fi
+
           if git diff --quiet; then
             echo "Already format-clean."
             exit 0
@@ -63,9 +76,10 @@ jobs:
           git commit -m "style: apply dart format"
           git push origin "HEAD:${BRANCH}"
 
-      # `flutter analyze` output is turned into check-run annotations because
-      # workflow logs are not always reachable from outside the runner.
+      # Report each finding as a check-run annotation: workflow logs are served
+      # from a host that is not always reachable, but the annotations API is.
       - name: Analyze
+        if: always()
         run: |
           set +e
           dart analyze --format=machine . > /tmp/analyze.txt 2>&1
@@ -73,7 +87,7 @@ jobs:
           set -e
           cat /tmp/analyze.txt
           python3 - <<'PY'
-          import os, re
+          import os
           errors = 0
           path = '/tmp/analyze.txt'
           if os.path.exists(path):
@@ -82,8 +96,10 @@ jobs:
                   if len(parts) < 8 or parts[0] not in ('ERROR', 'WARNING', 'INFO'):
                       continue
                   severity, _, code, file, ln, col, _, message = parts[:8]
-                  message = message.replace('%', '%25').replace('\r', ' ').replace('\n', ' ')
-                  print(f'::{severity.lower()} file={file},line={ln},col={col},title={code}::{message}')
+                  message = (message.replace('%', '%25')
+                                    .replace('\r', ' ').replace('\n', ' '))
+                  print(f'::{severity.lower()} file={file},line={ln},col={col},'
+                        f'title={code}::{message}')
                   if severity == 'ERROR':
                       errors += 1
           print(f'analyze-errors={errors}')
@@ -94,6 +110,7 @@ jobs:
           fi
 
       - name: Test
+        if: always()
         run: |
           set +e
           flutter test --reporter json > /tmp/test.json 2>/tmp/test.err
@@ -102,10 +119,9 @@ jobs:
           tail -40 /tmp/test.err || true
           python3 - <<'PY'
           import json, os
-          failures, total = [], 0
+          failures, total, seen = [], 0, {}
           path = '/tmp/test.json'
           if os.path.exists(path):
-              suites = {}
               for line in open(path, encoding='utf-8', errors='replace'):
                   line = line.strip()
                   if not line.startswith('{'):
@@ -116,17 +132,16 @@ jobs:
                       continue
                   t = event.get('type')
                   if t == 'suite':
-                      suites[event.get('suite', {}).get('id')] = event.get('suite', {}).get('path', '?')
+                      suite = event.get('suite') or {}
+                      seen[suite.get('id')] = suite.get('path', '?')
                   elif t == 'testStart':
                       total += 1
                   elif t == 'error':
-                      suite = suites.get(event.get('testID'), '?')
-                      msg = (event.get('error') or '')[:400].replace('\\n', ' ').replace('%', '%25')
-                      failures.append(f'{suite}: {msg}')
-                  elif t == 'testDone' and event.get('result') == 'error':
-                      pass
+                      msg = (event.get('error') or '')[:400]
+                      msg = msg.replace('\\n', ' ').replace('%', '%25')
+                      failures.append(msg)
           for f in failures:
-              print(f'::error title=test failure::{f}')
+              print(f'::error title=Test failure::{f}')
           print(f'tests={total} errors={len(failures)}')
           PY
           if [ "$status" -ne 0 ]; then
