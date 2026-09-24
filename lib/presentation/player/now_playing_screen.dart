@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../domain/entities/song.dart';
+import '../widgets/artwork.dart';
 import 'player_controller.dart';
 
 class NowPlayingScreen extends ConsumerStatefulWidget {
@@ -11,6 +14,8 @@ class NowPlayingScreen extends ConsumerStatefulWidget {
 }
 
 class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
+  /// Non-null while the user is dragging the seek bar, so the thumb follows the
+  /// finger instead of snapping back to the reported position.
   double? _dragValue;
 
   String _formatDuration(Duration duration) {
@@ -22,10 +27,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   @override
   Widget build(BuildContext context) {
     final playerState = ref.watch(playerControllerProvider);
-    final playerNotifier = ref.read(playerControllerProvider.notifier);
+    final notifier = ref.read(playerControllerProvider.notifier);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     final song = playerState.currentSong;
 
     if (song == null) {
@@ -33,7 +37,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
           ),
         ),
         body: const Center(child: Text('Tidak ada lagu yang sedang diputar')),
@@ -43,25 +47,19 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     final totalSeconds = playerState.duration.inMilliseconds / 1000.0;
     final currentSeconds = playerState.position.inMilliseconds / 1000.0;
     final maxSlider = totalSeconds > 0 ? totalSeconds : 1.0;
-    final currentSlider = _dragValue ?? (currentSeconds.clamp(0.0, maxSlider));
-
-    final hasPrevious = playerState.currentIndex > 0;
-    final hasNext =
-        (playerState.currentIndex + 1 < playerState.queue.length) ||
-        playerState.isRadioEnabled;
+    final currentSlider = _dragValue ?? currentSeconds.clamp(0.0, maxSlider);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         centerTitle: true,
         title: Column(
-          children: [
+          children: <Widget>[
             Text(
               playerState.isRadioEnabled
                   ? 'PLAYING FROM INFINITE RADIO'
@@ -75,15 +73,16 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
             if (playerState.queue.isNotEmpty)
               Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: <Widget>[
                   Text(
-                    'Track ${playerState.currentIndex + 1} of ${playerState.queue.length}',
+                    'Track ${playerState.currentIndex + 1} of '
+                    '${playerState.queue.length}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (playerState.isRadioEnabled) ...[
+                  if (playerState.isRadioEnabled) ...<Widget>[
                     const SizedBox(width: 4),
                     Icon(
                       Icons.all_inclusive_rounded,
@@ -95,23 +94,34 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               ),
           ],
         ),
+        actions: <Widget>[
+          IconButton(
+            tooltip: playerState.isRadioEnabled
+                ? 'Autoplay radio on'
+                : 'Autoplay radio off',
+            icon: Icon(
+              Icons.all_inclusive_rounded,
+              color: playerState.isRadioEnabled
+                  ? colorScheme.primary
+                  : colorScheme.onSurface.withValues(alpha: 0.38),
+            ),
+            onPressed: notifier.toggleRadioMode,
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: Column(
-            children: [
+            children: <Widget>[
               const Spacer(),
-              // Large Thumbnail with Hero transition
               Center(
                 child: Hero(
                   tag: 'player_artwork_${song.videoId}',
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.78,
-                    height: MediaQuery.of(context).size.width * 0.78,
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
+                      boxShadow: <BoxShadow>[
                         BoxShadow(
                           color: colorScheme.shadow.withValues(alpha: 0.2),
                           blurRadius: 28,
@@ -119,41 +129,21 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                         ),
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: song.thumbnailUrl.isNotEmpty
-                          ? Image.network(
-                              song.thumbnailUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    color: colorScheme.surfaceContainerHighest,
-                                    child: Icon(
-                                      Icons.music_note_rounded,
-                                      size: 80,
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                            )
-                          : Container(
-                              color: colorScheme.surfaceContainerHighest,
-                              child: Icon(
-                                Icons.music_note_rounded,
-                                size: 80,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
+                    child: Artwork(
+                      url: song.thumbnailUrl,
+                      size: MediaQuery.of(context).size.width * 0.78,
+                      radius: 24,
+                      fallbackIconSize: 80,
                     ),
                   ),
                 ),
               ),
               const Spacer(),
-              // Song Info
               Align(
                 alignment: Alignment.centerLeft,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Text(
                       song.title,
                       maxLines: 1,
@@ -164,7 +154,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      song.artist,
+                      _artistLine(song),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(
@@ -175,7 +165,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Seekbar Slider
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 4,
@@ -191,29 +180,21 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                 ),
                 child: Slider(
                   value: currentSlider.clamp(0.0, maxSlider),
-                  min: 0.0,
                   max: maxSlider,
-                  onChanged: (val) {
-                    setState(() {
-                      _dragValue = val;
-                    });
-                  },
+                  onChanged: (val) => setState(() => _dragValue = val),
                   onChangeEnd: (val) {
-                    playerNotifier.seek(
+                    notifier.seek(
                       Duration(milliseconds: (val * 1000).round()),
                     );
-                    setState(() {
-                      _dragValue = null;
-                    });
+                    setState(() => _dragValue = null);
                   },
                 ),
               ),
-              // Time row
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: <Widget>[
                     Text(
                       _formatDuration(
                         _dragValue != null
@@ -238,43 +219,41 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Controls row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Shuffle Button
+                children: <Widget>[
                   IconButton(
                     iconSize: 26,
+                    tooltip: playerState.isShuffleEnabled
+                        ? 'Shuffle on'
+                        : 'Shuffle queue',
                     icon: Icon(
                       Icons.shuffle_rounded,
                       color: playerState.isShuffleEnabled
                           ? colorScheme.primary
                           : colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
-                    tooltip: playerState.isShuffleEnabled
-                        ? 'Shuffle Aktif'
-                        : 'Acak Antrean',
-                    onPressed: playerNotifier.toggleShuffle,
+                    onPressed: notifier.toggleShuffle,
                   ),
-                  // Previous Button
                   IconButton(
                     iconSize: 38,
+                    tooltip: 'Previous',
                     icon: Icon(
                       Icons.skip_previous_rounded,
-                      color: hasPrevious
+                      color: playerState.hasPrevious
                           ? colorScheme.onSurface
                           : colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
-                    onPressed: hasPrevious ? playerNotifier.playPrevious : null,
+                    onPressed:
+                        playerState.hasPrevious ? notifier.playPrevious : null,
                   ),
-                  // Play/Pause Button
                   Container(
                     width: 70,
                     height: 70,
                     decoration: BoxDecoration(
                       color: colorScheme.primary,
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      boxShadow: <BoxShadow>[
                         BoxShadow(
                           color: colorScheme.primary.withValues(alpha: 0.35),
                           blurRadius: 16,
@@ -284,7 +263,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     ),
                     child: playerState.isLoading
                         ? Padding(
-                            padding: const EdgeInsets.all(20.0),
+                            padding: const EdgeInsets.all(20),
                             child: CircularProgressIndicator(
                               strokeWidth: 3,
                               color: colorScheme.onPrimary,
@@ -292,39 +271,38 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                           )
                         : IconButton(
                             iconSize: 36,
+                            tooltip: playerState.isPlaying ? 'Pause' : 'Play',
                             icon: Icon(
                               playerState.isPlaying
                                   ? Icons.pause_rounded
                                   : Icons.play_arrow_rounded,
                               color: colorScheme.onPrimary,
                             ),
-                            onPressed: playerNotifier.togglePlayPause,
+                            onPressed: notifier.togglePlayPause,
                           ),
                   ),
-                  // Next Button
                   IconButton(
                     iconSize: 38,
+                    tooltip: 'Next',
                     icon: Icon(
                       Icons.skip_next_rounded,
-                      color: hasNext
+                      color: playerState.hasNext
                           ? colorScheme.onSurface
                           : colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
-                    onPressed: hasNext ? playerNotifier.playNext : null,
+                    onPressed:
+                        playerState.hasNext ? () => notifier.playNext() : null,
                   ),
-                  // Infinite Autoplay / Radio Mode Toggle
                   IconButton(
                     iconSize: 26,
+                    tooltip: playerState.repeatMode.label,
                     icon: Icon(
-                      Icons.all_inclusive_rounded,
-                      color: playerState.isRadioEnabled
-                          ? colorScheme.primary
-                          : colorScheme.onSurface.withValues(alpha: 0.38),
+                      _repeatIcon(playerState.repeatMode),
+                      color: playerState.repeatMode == PlaybackRepeat.off
+                          ? colorScheme.onSurface.withValues(alpha: 0.38)
+                          : colorScheme.primary,
                     ),
-                    tooltip: playerState.isRadioEnabled
-                        ? 'Autoplay Radio Aktif'
-                        : 'Autoplay Radio Mati',
-                    onPressed: playerNotifier.toggleRadioMode,
+                    onPressed: notifier.cycleRepeatMode,
                   ),
                 ],
               ),
@@ -335,4 +313,15 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       ),
     );
   }
+
+  String _artistLine(Song song) {
+    final album = song.album?.name;
+    if (album == null || album.isEmpty) return song.artist;
+    return '${song.artist} • $album';
+  }
+
+  IconData _repeatIcon(PlaybackRepeat mode) => switch (mode) {
+        PlaybackRepeat.one => Icons.repeat_one_rounded,
+        _ => Icons.repeat_rounded,
+      };
 }

@@ -117,6 +117,16 @@ jobs:
           status=$?
           set -e
           tail -40 /tmp/test.err || true
+          # A compile error aborts the run before any test event is emitted, so
+          # the stderr tail is the only trace of it — surface it as an
+          # annotation too, not just in the log.
+          if [ "$status" -ne 0 ] && [ -s /tmp/test.err ]; then
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              esc=$(printf '%s' "$line" | head -c 300 | sed 's/%/%25/g; s/\\r//g')
+              echo "::error title=flutter test stderr::$esc"
+            done < <(tail -12 /tmp/test.err)
+          fi
           python3 - <<'PY'
           import json, os
           failures, total, seen = [], 0, {}
