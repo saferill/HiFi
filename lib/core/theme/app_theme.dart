@@ -4,7 +4,8 @@ class AppTheme {
   static const Color defaultSeedColor = Colors.deepPurple;
 
   static ThemeData light({ColorScheme? dynamicColorScheme}) {
-    final scheme = dynamicColorScheme ??
+    final scheme =
+        dynamicColorScheme ??
         ColorScheme.fromSeed(
           seedColor: defaultSeedColor,
           brightness: Brightness.light,
@@ -18,7 +19,8 @@ class AppTheme {
   }
 
   static ThemeData dark({ColorScheme? dynamicColorScheme}) {
-    final scheme = dynamicColorScheme ??
+    final scheme =
+        dynamicColorScheme ??
         ColorScheme.fromSeed(
           seedColor: defaultSeedColor,
           brightness: Brightness.dark,

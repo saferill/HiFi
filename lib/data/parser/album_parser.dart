@@ -40,17 +40,20 @@ AlbumPageResult? parseAlbumPage(Map<String, dynamic> rawJson) {
     }
 
     final header = _findHeader(rawJson);
-    final title = runsToText(digValue(header, <String>['title', 'runs'])) ??
+    final title =
+        runsToText(digValue(header, <String>['title', 'runs'])) ??
         runsToText(digValue(shelf, <String>['title', 'runs']));
     if (title == null) return null;
 
     final browseId = _headerBrowseId(rawJson) ?? '';
     final playlistId = shelf['playlistId'];
-    final thumbnail = bestThumbnailUrl(
-          dig(
-            header,
-            <String>['thumbnail', 'musicThumbnailRenderer', 'thumbnail'],
-          ),
+    final thumbnail =
+        bestThumbnailUrl(
+          dig(header, <String>[
+            'thumbnail',
+            'musicThumbnailRenderer',
+            'thumbnail',
+          ]),
         ) ??
         (songs.isEmpty ? '' : songs.first.thumbnailUrl);
 
@@ -127,18 +130,8 @@ Map<String, dynamic>? _findHeader(Map<String, dynamic> rawJson) {
 
 String? _headerBrowseId(Map<String, dynamic> rawJson) {
   final candidates = <List<String>>[
-    <String>[
-      'header',
-      'musicDetailHeaderRenderer',
-      'title',
-      'runs',
-    ],
-    <String>[
-      'header',
-      'musicResponsiveHeaderRenderer',
-      'title',
-      'runs',
-    ],
+    <String>['header', 'musicDetailHeaderRenderer', 'title', 'runs'],
+    <String>['header', 'musicResponsiveHeaderRenderer', 'title', 'runs'],
   ];
   for (final path in candidates) {
     final runs = asList(digValue(rawJson, path));
@@ -160,7 +153,8 @@ String? _continuationToken(Map<String, dynamic> shelf) {
   if (continuations == null || continuations.isEmpty) return null;
 
   final first = asMap(continuations.first);
-  final next = asMap(first?['nextContinuationData']) ??
+  final next =
+      asMap(first?['nextContinuationData']) ??
       asMap(first?['nextRadioContinuationData']);
   final token = next?['continuation'];
   return token is String && token.isNotEmpty ? token : null;

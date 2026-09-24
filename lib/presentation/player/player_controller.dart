@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+
 import '../../data/repositories/music_repository.dart';
 import '../../data/services/native_stream_service.dart';
 // ignore: unused_import
@@ -88,7 +90,8 @@ class PlayerController extends Notifier<PlayerState> {
     _playerStateSub = _audioPlayer.playerStateStream.listen((playerState) {
       final isPlaying = playerState.playing;
       final processingState = playerState.processingState;
-      final isBuffering = processingState == ProcessingState.buffering ||
+      final isBuffering =
+          processingState == ProcessingState.buffering ||
           processingState == ProcessingState.loading;
 
       state = state.copyWith(
@@ -137,8 +140,11 @@ class PlayerController extends Notifier<PlayerState> {
   }
 
   Future<void> playSong(Song song, {int? index}) async {
-    final existingIndex = state.queue.indexWhere((s) => s.videoId == song.videoId);
-    final newIndex = index ??
+    final existingIndex = state.queue.indexWhere(
+      (s) => s.videoId == song.videoId,
+    );
+    final newIndex =
+        index ??
         (existingIndex != -1
             ? existingIndex
             : (state.queue.isNotEmpty ? state.queue.length : 0));
@@ -171,8 +177,9 @@ class PlayerController extends Notifier<PlayerState> {
 
     try {
       final nativeStreamService = ref.read(nativeStreamServiceProvider);
-      final streamUrl =
-          await nativeStreamService.getAudioStreamUrl(song.videoId);
+      final streamUrl = await nativeStreamService.getAudioStreamUrl(
+        song.videoId,
+      );
 
       if (streamUrl == null || streamUrl.isEmpty) {
         state = state.copyWith(
@@ -202,8 +209,7 @@ class PlayerController extends Notifier<PlayerState> {
       await _audioPlayer.setUrl(
         streamUrl,
         headers: {
-          'User-Agent':
-              'com.google.android.apps.youtube.music/7.16.53 (Linux; U; Android 11) gzip',
+          'User-Agent': 'com.google.android.apps.youtube.music/7.16.53 (Linux; U; Android 11) gzip',
         },
       );
       // ignore: avoid_print
@@ -279,13 +285,17 @@ class PlayerController extends Notifier<PlayerState> {
     if (newShuffleState && state.queue.isNotEmpty && state.currentIndex >= 0) {
       // Shuffle only upcoming tracks after currentIndex
       final played = state.queue.sublist(0, state.currentIndex + 1);
-      final upcoming = state.queue.sublist(state.currentIndex + 1).toList()..shuffle();
+      final upcoming = state.queue.sublist(state.currentIndex + 1).toList()
+        ..shuffle();
 
       state = state.copyWith(
         isShuffleEnabled: true,
         queue: [...played, ...upcoming],
       );
-      developer.log('Queue shuffled for upcoming songs', name: 'PlayerController');
+      developer.log(
+        'Queue shuffled for upcoming songs',
+        name: 'PlayerController',
+      );
     } else {
       state = state.copyWith(isShuffleEnabled: newShuffleState);
     }
@@ -366,8 +376,9 @@ class PlayerController extends Notifier<PlayerState> {
       );
 
       final existingIds = state.queue.map((s) => s.videoId).toSet();
-      var newSongs =
-          result.songs.where((s) => !existingIds.contains(s.videoId)).toList();
+      var newSongs = result.songs
+          .where((s) => !existingIds.contains(s.videoId))
+          .toList();
 
       if (state.isShuffleEnabled) {
         newSongs.shuffle();

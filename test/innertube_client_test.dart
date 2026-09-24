@@ -21,7 +21,9 @@ void main() {
         if (tabs.isNotEmpty && tabs[0]['tabRenderer'] != null) {
           final tabRenderer = tabs[0]['tabRenderer'] as Map<String, dynamic>;
           print('TAB_RENDERER_TITLE: ${tabRenderer['title']}');
-          print('TAB_CONTENT_KEYS: ${(tabRenderer['content'] as Map<String, dynamic>?)?.keys.toList()}');
+          print(
+            'TAB_CONTENT_KEYS: ${(tabRenderer['content'] as Map<String, dynamic>?)?.keys.toList()}',
+          );
         }
       }
     }

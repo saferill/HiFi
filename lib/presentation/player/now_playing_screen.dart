@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'player_controller.dart';
 
 class NowPlayingScreen extends ConsumerStatefulWidget {
@@ -35,9 +36,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: const Center(
-          child: Text('Tidak ada lagu yang sedang diputar'),
-        ),
+        body: const Center(child: Text('Tidak ada lagu yang sedang diputar')),
       );
     }
 
@@ -128,13 +127,13 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                color: colorScheme.surfaceContainerHighest,
-                                child: Icon(
-                                  Icons.music_note_rounded,
-                                  size: 80,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
+                                    color: colorScheme.surfaceContainerHighest,
+                                    child: Icon(
+                                      Icons.music_note_rounded,
+                                      size: 80,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
                             )
                           : Container(
                               color: colorScheme.surfaceContainerHighest,
@@ -180,10 +179,12 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 4,
-                  thumbShape:
-                      const RoundSliderThumbShape(enabledThumbRadius: 6),
-                  overlayShape:
-                      const RoundSliderOverlayShape(overlayRadius: 14),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 6,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 14,
+                  ),
                   activeTrackColor: colorScheme.primary,
                   inactiveTrackColor: colorScheme.surfaceContainerHighest,
                   thumbColor: colorScheme.primary,
@@ -198,8 +199,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     });
                   },
                   onChangeEnd: (val) {
-                    playerNotifier
-                        .seek(Duration(milliseconds: (val * 1000).round()));
+                    playerNotifier.seek(
+                      Duration(milliseconds: (val * 1000).round()),
+                    );
                     setState(() {
                       _dragValue = null;
                     });
@@ -216,7 +218,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                       _formatDuration(
                         _dragValue != null
                             ? Duration(
-                                milliseconds: (_dragValue! * 1000).round())
+                                milliseconds: (_dragValue! * 1000).round(),
+                              )
                             : playerState.position,
                       ),
                       style: theme.textTheme.bodySmall?.copyWith(

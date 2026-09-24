@@ -4,10 +4,7 @@ class RadioResult {
   final List<Song> songs;
   final String? continuationToken;
 
-  const RadioResult({
-    required this.songs,
-    this.continuationToken,
-  });
+  const RadioResult({required this.songs, this.continuationToken});
 }
 
 RadioResult parseRadioResponse(Map<String, dynamic> rawJson) {
@@ -44,18 +41,20 @@ RadioResult parseRadioResponse(Map<String, dynamic> rawJson) {
     }
 
     // 2. Initial watch next response
-    final contents = rawJson['contents']
-        ?['singleColumnMusicWatchNextResultsRenderer']?['tabbedRenderer']
-        ?['watchNextTabbedResultsRenderer']?['tabs'] as List?;
+    final contents =
+        rawJson['contents']?['singleColumnMusicWatchNextResultsRenderer']?['tabbedRenderer']?['watchNextTabbedResultsRenderer']?['tabs']
+            as List?;
 
     if (contents != null && contents.isNotEmpty) {
       for (final tab in contents) {
         if (tab is! Map<String, dynamic>) continue;
         final tabRenderer = tab['tabRenderer'] as Map<String, dynamic>?;
-        final musicQueue = tabRenderer?['content']?['musicQueueRenderer']
-            as Map<String, dynamic>?;
-        final playlistPanel = musicQueue?['content']?['playlistPanelRenderer']
-            as Map<String, dynamic>?;
+        final musicQueue =
+            tabRenderer?['content']?['musicQueueRenderer']
+                as Map<String, dynamic>?;
+        final playlistPanel =
+            musicQueue?['content']?['playlistPanelRenderer']
+                as Map<String, dynamic>?;
 
         if (playlistPanel != null) {
           final items = playlistPanel['contents'] as List?;
@@ -94,8 +93,10 @@ Song? _parsePlaylistPanelVideoItem(Map<String, dynamic> item) {
       title = titleRuns[0]?['text'] as String? ?? 'Unknown Title';
     }
 
-    final bylineRuns = (videoRenderer['longBylineText']?['runs'] ??
-        videoRenderer['shortBylineText']?['runs']) as List?;
+    final bylineRuns =
+        (videoRenderer['longBylineText']?['runs'] ??
+                videoRenderer['shortBylineText']?['runs'])
+            as List?;
     String artist = 'Unknown Artist';
     if (bylineRuns != null && bylineRuns.isNotEmpty) {
       artist = bylineRuns[0]?['text'] as String? ?? 'Unknown Artist';
@@ -128,8 +129,8 @@ String? _extractContinuationToken(Map<String, dynamic> panel) {
     final continuations = panel['continuations'] as List?;
     if (continuations != null && continuations.isNotEmpty) {
       final first = continuations[0] as Map<String, dynamic>?;
-      final nextContinuation = first?['nextRadioContinuationData'] ??
-          first?['nextContinuationData'];
+      final nextContinuation =
+          first?['nextRadioContinuationData'] ?? first?['nextContinuationData'];
       if (nextContinuation is Map<String, dynamic>) {
         return nextContinuation['continuation'] as String?;
       }

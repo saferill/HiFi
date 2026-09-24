@@ -39,8 +39,8 @@ class InnertubeException implements Exception {
 /// parsers under `lib/data/parser/` stay unit-testable against fixtures.
 class InnertubeClient {
   InnertubeClient({Dio? dio, YouTubeLocale? locale})
-      : _dio = dio ?? _createDefaultDio(),
-        _locale = locale ?? const YouTubeLocale();
+    : _dio = dio ?? _createDefaultDio(),
+      _locale = locale ?? const YouTubeLocale();
 
   static const String _baseUrl = 'https://music.youtube.com/youtubei/v1/';
 

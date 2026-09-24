@@ -83,20 +83,18 @@ String? bestThumbnailUrl(Object? thumbnailsNode) {
 
 /// Reads `thumbnailRenderer.musicThumbnailRenderer`, the wrapper used by
 /// carousel cards.
-String? twoRowThumbnail(Object? renderer) =>
-    bestThumbnailUrl(dig(renderer, <String>[
-      'thumbnailRenderer',
-      'musicThumbnailRenderer',
-      'thumbnail',
-    ]));
+String? twoRowThumbnail(Object? renderer) => bestThumbnailUrl(
+  dig(renderer, <String>[
+    'thumbnailRenderer',
+    'musicThumbnailRenderer',
+    'thumbnail',
+  ]),
+);
 
 /// Reads `thumbnail.musicThumbnailRenderer`, the wrapper used by list rows.
-String? listItemThumbnail(Object? renderer) =>
-    bestThumbnailUrl(dig(renderer, <String>[
-      'thumbnail',
-      'musicThumbnailRenderer',
-      'thumbnail',
-    ]));
+String? listItemThumbnail(Object? renderer) => bestThumbnailUrl(
+  dig(renderer, <String>['thumbnail', 'musicThumbnailRenderer', 'thumbnail']),
+);
 
 /// Reads a bare `thumbnail.thumbnails`, used by playlist panel rows.
 String? bareThumbnail(Object? renderer) =>

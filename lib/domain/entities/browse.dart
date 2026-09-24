@@ -49,6 +49,6 @@ class BrowsePage {
   /// Every track on the page, in shelf order. Used to start a queue straight
   /// from Home without a second request.
   List<Song> get allSongs => <Song>[
-        for (final section in sections) ...section.songs,
-      ];
+    for (final section in sections) ...section.songs,
+  ];
 }

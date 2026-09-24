@@ -68,9 +68,7 @@ class AlbumItem {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AlbumItem &&
-          browseId == other.browseId &&
-          title == other.title;
+      other is AlbumItem && browseId == other.browseId && title == other.title;
 
   @override
   int get hashCode => Object.hash(browseId, title);

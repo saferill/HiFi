@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -23,38 +24,46 @@ class CustomYoutubeHttpClient extends YoutubeHttpClient {
 class StreamService {
   final YoutubeExplode _yt;
 
-  StreamService({YoutubeExplode? yt})
-      : _yt = yt ?? YoutubeExplode();
+  StreamService({YoutubeExplode? yt}) : _yt = yt ?? YoutubeExplode();
 
   Future<String?> getAudioStreamUrl(String videoId) async {
     try {
       // ignore: avoid_print
       print('[StreamService] Fetching stream manifest for videoId: $videoId');
-      developer.log('Fetching stream manifest for videoId: $videoId', name: 'StreamService');
+      developer.log(
+        'Fetching stream manifest for videoId: $videoId',
+        name: 'StreamService',
+      );
       // ignore: avoid_print
       print('[StreamService] BEFORE getManifest: $videoId');
       developer.log('BEFORE getManifest: $videoId', name: 'StreamService');
       final manifest = await _yt.videos.streamsClient
           .getManifest(
             videoId,
-            ytClients: [
-              YoutubeApiClient.android,
-              YoutubeApiClient.ios,
-            ],
+            ytClients: [YoutubeApiClient.android, YoutubeApiClient.ios],
           )
-          .timeout(const Duration(seconds: 15), onTimeout: () {
-            // ignore: avoid_print
-            print('[StreamService] TIMEOUT getManifest: $videoId');
-            developer.log('TIMEOUT getManifest: $videoId', name: 'StreamService');
-            throw Exception('Timeout saat mengambil manifest stream');
-          });
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              // ignore: avoid_print
+              print('[StreamService] TIMEOUT getManifest: $videoId');
+              developer.log(
+                'TIMEOUT getManifest: $videoId',
+                name: 'StreamService',
+              );
+              throw Exception('Timeout saat mengambil manifest stream');
+            },
+          );
       // ignore: avoid_print
       print('[StreamService] AFTER getManifest: $videoId');
       developer.log('AFTER getManifest: $videoId', name: 'StreamService');
       final audioStreams = manifest.audioOnly;
 
       if (audioStreams.isEmpty) {
-        developer.log('No audioOnly streams found for $videoId', name: 'StreamService');
+        developer.log(
+          'No audioOnly streams found for $videoId',
+          name: 'StreamService',
+        );
         return null;
       }
 

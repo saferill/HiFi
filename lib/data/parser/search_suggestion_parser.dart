@@ -24,18 +24,19 @@ List<SearchSuggestion> parseSearchSuggestions(Map<String, dynamic> rawJson) {
     if (sections == null) return suggestions;
 
     for (final section in sections) {
-      final rows = asList(digValue(section, <String>[
-        'searchSuggestionsSectionRenderer',
-        'contents',
-      ]));
+      final rows = asList(
+        digValue(section, <String>[
+          'searchSuggestionsSectionRenderer',
+          'contents',
+        ]),
+      );
       if (rows == null) continue;
 
       for (final row in rows) {
         final map = asMap(row);
         if (map == null) continue;
 
-        final suggestionRenderer =
-            asMap(map['searchSuggestionRenderer']);
+        final suggestionRenderer = asMap(map['searchSuggestionRenderer']);
         if (suggestionRenderer != null) {
           final query = runsToText(suggestionRenderer['suggestion']?['runs']);
           if (query != null) {
@@ -62,11 +63,13 @@ SearchSuggestion? _parseMediaRow(Map<String, dynamic> renderer) {
   final flexColumns = asList(renderer['flexColumns']);
   if (flexColumns == null || flexColumns.isEmpty) return null;
 
-  final runs = asList(digValue(flexColumns.first, <String>[
-    'musicResponsiveListItemFlexColumnRenderer',
-    'text',
-    'runs',
-  ]));
+  final runs = asList(
+    digValue(flexColumns.first, <String>[
+      'musicResponsiveListItemFlexColumnRenderer',
+      'text',
+      'runs',
+    ]),
+  );
   final title = firstRunText(runs);
   if (title == null) return null;
 

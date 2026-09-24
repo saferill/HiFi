@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/song.dart';
 import '../network/innertube_client.dart';
 import '../parser/radio_parser.dart';
@@ -14,8 +15,10 @@ final musicRepositoryProvider = Provider<MusicRepository>((ref) {
   );
 });
 
-final searchSongsProvider =
-    FutureProvider.family<List<Song>, String>((ref, query) async {
+final searchSongsProvider = FutureProvider.family<List<Song>, String>((
+  ref,
+  query,
+) async {
   if (query.trim().isEmpty) {
     return [];
   }
@@ -27,10 +30,7 @@ class MusicRepository {
   final InnertubeClient innertubeClient;
   final StreamService streamService;
 
-  MusicRepository({
-    required this.innertubeClient,
-    required this.streamService,
-  });
+  MusicRepository({required this.innertubeClient, required this.streamService});
 
   Future<List<Song>> searchSongs(String query) async {
     final rawJson = await innertubeClient.search(query);

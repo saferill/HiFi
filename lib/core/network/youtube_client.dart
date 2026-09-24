@@ -19,10 +19,8 @@ class YouTubeLocale {
   /// Language code, e.g. `en`, `id`. Drives response text.
   final String hl;
 
-  YouTubeLocale copyWith({String? gl, String? hl}) => YouTubeLocale(
-        gl: gl ?? this.gl,
-        hl: hl ?? this.hl,
-      );
+  YouTubeLocale copyWith({String? gl, String? hl}) =>
+      YouTubeLocale(gl: gl ?? this.gl, hl: hl ?? this.hl);
 
   @override
   String toString() => 'YouTubeLocale(gl: $gl, hl: $hl)';
@@ -56,10 +54,7 @@ class YouTubeClient {
   final int? utcOffsetMinutes;
 
   /// The `context` object InnerTube expects in every request body.
-  Map<String, dynamic> toContext(
-    YouTubeLocale locale, {
-    String? visitorData,
-  }) {
+  Map<String, dynamic> toContext(YouTubeLocale locale, {String? visitorData}) {
     return <String, dynamic>{
       'client': <String, dynamic>{
         'clientName': clientName,
@@ -72,8 +67,7 @@ class YouTubeClient {
         if (osName != null) 'osName': osName,
         if (osVersion != null) 'osVersion': osVersion,
         if (timeZone != null) 'timeZone': timeZone,
-        if (utcOffsetMinutes != null)
-          'utcOffsetMinutes': utcOffsetMinutes,
+        if (utcOffsetMinutes != null) 'utcOffsetMinutes': utcOffsetMinutes,
         if (visitorData != null && visitorData.isNotEmpty)
           'visitorData': visitorData,
       },

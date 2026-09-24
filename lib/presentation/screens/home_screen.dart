@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../data/repositories/music_repository.dart';
 import '../../domain/entities/song.dart';
 import '../player/player_controller.dart';
@@ -13,7 +14,9 @@ class ActiveSearchQueryNotifier extends Notifier<String> {
 }
 
 final activeSearchQueryProvider =
-    NotifierProvider<ActiveSearchQueryNotifier, String>(ActiveSearchQueryNotifier.new);
+    NotifierProvider<ActiveSearchQueryNotifier, String>(
+      ActiveSearchQueryNotifier.new,
+    );
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -68,7 +71,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: Container(
           height: 48,
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             borderRadius: BorderRadius.circular(24),
           ),
           child: TextField(
@@ -120,9 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             )
           : searchAsync!.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -184,20 +187,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 return ListView.separated(
                   padding: const EdgeInsets.only(top: 8, bottom: 88),
                   itemCount: songs.length,
-                  separatorBuilder: (context, index) => const Divider(
-                    height: 1,
-                    indent: 72,
-                    endIndent: 16,
-                  ),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1, indent: 72, endIndent: 16),
                   itemBuilder: (context, index) {
                     final song = songs[index];
-                    final isCurrentSong = playerState.currentSong?.videoId == song.videoId;
+                    final isCurrentSong =
+                        playerState.currentSong?.videoId == song.videoId;
 
                     return _SongListTile(
                       song: song,
                       isSelected: isCurrentSong,
                       onTap: () {
-                        ref.read(playerControllerProvider.notifier).playQueue(songs, index);
+                        ref
+                            .read(playerControllerProvider.notifier)
+                            .playQueue(songs, index);
                       },
                     );
                   },
@@ -241,7 +244,9 @@ class _SongListTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       selected: isSelected,
-      selectedTileColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+      selectedTileColor: theme.colorScheme.primaryContainer.withValues(
+        alpha: 0.25,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -269,7 +274,7 @@ class _SongListTile extends StatelessWidget {
                           strokeWidth: 2,
                           value: loadingProgress.expectedTotalBytes != null
                               ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
+                                    loadingProgress.expectedTotalBytes!
                               : null,
                         ),
                       ),
@@ -304,10 +309,7 @@ class _SongListTile extends StatelessWidget {
         ),
       ),
       trailing: isSelected
-          ? Icon(
-              Icons.graphic_eq_rounded,
-              color: theme.colorScheme.primary,
-            )
+          ? Icon(Icons.graphic_eq_rounded, color: theme.colorScheme.primary)
           : null,
     );
   }

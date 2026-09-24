@@ -38,9 +38,7 @@ String? _pageTitle(Map<String, dynamic> rawJson) {
     'singleColumnBrowseResultsRenderer',
   ]);
   if (singleColumn != null) {
-    final title = digValue(singleColumn, <String>[
-      'tabs',
-    ]);
+    final title = digValue(singleColumn, <String>['tabs']);
     final tabs = asList(title);
     if (tabs != null) {
       for (final tab in tabs) {
@@ -62,34 +60,21 @@ String? _pageTitle(Map<String, dynamic> rawJson) {
     'twoColumnBrowseResultsRenderer',
   ]);
   if (header != null) {
-    return runsToText(digValue(header, <String>[
-      'tabs',
-    ])) ??
+    return runsToText(digValue(header, <String>['tabs'])) ??
         _twoColumnTitle(rawJson);
   }
   return null;
 }
 
-String? _twoColumnTitle(Map<String, dynamic> rawJson) =>
-    runsToText(digValue(rawJson, <String>[
-      'header',
-      'musicHeaderRenderer',
-      'title',
-    ]));
+String? _twoColumnTitle(Map<String, dynamic> rawJson) => runsToText(
+  digValue(rawJson, <String>['header', 'musicHeaderRenderer', 'title']),
+);
 
 /// Locates the list of shelves, tolerating both single- and two-column layouts.
 List<dynamic>? _findShelves(Map<String, dynamic> rawJson) {
   final candidates = <List<String>>[
-    <String>[
-      'contents',
-      'singleColumnBrowseResultsRenderer',
-      'tabs',
-    ],
-    <String>[
-      'contents',
-      'twoColumnBrowseResultsRenderer',
-      'tabs',
-    ],
+    <String>['contents', 'singleColumnBrowseResultsRenderer', 'tabs'],
+    <String>['contents', 'twoColumnBrowseResultsRenderer', 'tabs'],
   ];
 
   for (final path in candidates) {
@@ -97,22 +82,26 @@ List<dynamic>? _findShelves(Map<String, dynamic> rawJson) {
     if (tabs == null) continue;
 
     for (final tab in tabs) {
-      final sectionList = asList(digValue(tab, <String>[
-        'tabRenderer',
-        'content',
-        'sectionListRenderer',
-        'contents',
-      ]));
+      final sectionList = asList(
+        digValue(tab, <String>[
+          'tabRenderer',
+          'content',
+          'sectionListRenderer',
+          'contents',
+        ]),
+      );
       if (sectionList != null) return sectionList;
     }
   }
 
   // A continuation response carries shelves directly.
-  return asList(digValue(rawJson, <String>[
-    'continuationContents',
-    'sectionListContinuation',
-    'contents',
-  ]));
+  return asList(
+    digValue(rawJson, <String>[
+      'continuationContents',
+      'sectionListContinuation',
+      'contents',
+    ]),
+  );
 }
 
 BrowseSection? _parseShelf(Map<String, dynamic> shelf) {
@@ -131,9 +120,7 @@ BrowseSection? _parseShelf(Map<String, dynamic> shelf) {
         return _parseGrid(body);
       case 'musicResponsiveListItemRenderer':
         final song = parseListSong(body);
-        return song == null
-            ? null
-            : BrowseSection(songs: <Song>[song]);
+        return song == null ? null : BrowseSection(songs: <Song>[song]);
       case 'musicTwoRowItemRenderer':
         return _sectionFromTwoRow(body);
     }
@@ -186,12 +173,9 @@ BrowseSection _parseGrid(Map<String, dynamic> body) {
   }
 
   return BrowseSection(
-    title: runsToText(digValue(body, <String>[
-      'header',
-      'gridHeaderRenderer',
-      'title',
-      'runs',
-    ])),
+    title: runsToText(
+      digValue(body, <String>['header', 'gridHeaderRenderer', 'title', 'runs']),
+    ),
     moods: moods,
   );
 }
@@ -419,11 +403,13 @@ Song? parseListSong(Map<String, dynamic> renderer) {
   final flexColumns = asList(renderer['flexColumns']);
   if (flexColumns == null || flexColumns.isEmpty) return null;
 
-  final title = firstRunText(digValue(flexColumns.first, <String>[
-    'musicResponsiveListItemFlexColumnRenderer',
-    'text',
-    'runs',
-  ]));
+  final title = firstRunText(
+    digValue(flexColumns.first, <String>[
+      'musicResponsiveListItemFlexColumnRenderer',
+      'text',
+      'runs',
+    ]),
+  );
   if (title == null) return null;
 
   final videoId = _listRowVideoId(renderer, flexColumns);
@@ -511,16 +497,16 @@ String? _durationFromListRow(
   Map<String, dynamic> renderer,
   List<dynamic>? subtitleRuns,
 ) {
-  final fixed = digValue(renderer, <String>[
-    'fixedColumns',
-  ]);
+  final fixed = digValue(renderer, <String>['fixedColumns']);
   final columns = asList(fixed);
   if (columns != null && columns.isNotEmpty) {
-    final text = runsToText(digValue(columns.first, <String>[
-      'musicResponsiveListItemFixedColumnRenderer',
-      'text',
-      'runs',
-    ]));
+    final text = runsToText(
+      digValue(columns.first, <String>[
+        'musicResponsiveListItemFixedColumnRenderer',
+        'text',
+        'runs',
+      ]),
+    );
     if (text != null && RegExp(r'^\d{1,2}:\d{2}(:\d{2})?$').hasMatch(text)) {
       return text;
     }
@@ -565,8 +551,10 @@ String? _extractSongCount(List<dynamic>? subtitleRuns) {
     final text = asMap(run)?['text'];
     if (text is! String) continue;
     final trimmed = text.trim();
-    if (RegExp(r'\d+\s*(songs?|tracks?)', caseSensitive: false)
-        .hasMatch(trimmed)) {
+    if (RegExp(
+      r'\d+\s*(songs?|tracks?)',
+      caseSensitive: false,
+    ).hasMatch(trimmed)) {
       return trimmed;
     }
   }
