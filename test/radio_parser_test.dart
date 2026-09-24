@@ -1,29 +1,43 @@
-// ignore_for_file: avoid_print
-import 'package:app/data/network/innertube_client.dart';
 import 'package:app/data/parser/radio_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fixtures/innertube_fixtures.dart';
+
 void main() {
-  test('parseRadioResponse parses live YouTube Music radio results', () async {
-    final client = InnertubeClient();
+  group('parseRadioResponse', () {
+    test('reads the watch-next playlist panel into the radio queue', () {
+      final result = parseRadioResponse(radioResponse());
 
-    // Testing radio for Imagine Dragons - Bones (TO-_3tck2tg)
-    final rawJson = await client.getWatchNext(videoId: 'TO-_3tck2tg');
-    expect(rawJson, isNotEmpty);
+      expect(result.songs, hasLength(2));
+      expect(result.songs.map((s) => s.videoId).toList(),
+          <String>['TO-_3tck2tg', 'D9G1VOjN_84']);
+    });
 
-    final radioResult = parseRadioResponse(rawJson);
-    print('Radio songs count: ${radioResult.songs.length}');
-    print(
-      'Continuation token: ${radioResult.continuationToken != null ? "Present" : "None"}',
-    );
+    test('parses title, byline, length and artwork of each track', () {
+      final first = parseRadioResponse(radioResponse()).songs.first;
 
-    expect(radioResult.songs, isNotEmpty);
-    for (final song in radioResult.songs.take(5)) {
-      print(
-        'Radio Song: ${song.title} by ${song.artist} (${song.videoId}) [${song.duration}]',
-      );
-      expect(song.videoId, isNotEmpty);
-      expect(song.title, isNotEmpty);
-    }
+      expect(first.title, 'Bones');
+      expect(first.artist, 'Imagine Dragons');
+      expect(first.duration, '2:46');
+      expect(first.durationSeconds, 166);
+      expect(first.thumbnailUrl, contains('bones'));
+    });
+
+    test('falls back to shortBylineText when longBylineText is absent', () {
+      final second = parseRadioResponse(radioResponse()).songs.last;
+      expect(second.artist, 'Imagine Dragons');
+      expect(second.title, 'Enemy');
+    });
+
+    test('exposes the radio continuation token', () {
+      final result = parseRadioResponse(radioResponse());
+      expect(result.continuationToken, 'radio-page-2');
+    });
+
+    test('returns an empty result for a malformed payload', () {
+      final result = parseRadioResponse(<String, dynamic>{});
+      expect(result.songs, isEmpty);
+      expect(result.continuationToken, isNull);
+    });
   });
 }

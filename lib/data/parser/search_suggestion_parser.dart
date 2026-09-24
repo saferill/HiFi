@@ -73,15 +73,16 @@ SearchSuggestion? _parseMediaRow(Map<String, dynamic> renderer) {
   final title = firstRunText(runs);
   if (title == null) return null;
 
-  String? videoId = renderer['playlistItemData']?['videoId'] as String?;
-  if (videoId == null || videoId.isEmpty) {
-    videoId = digValue(renderer, <String>[
-      'navigationEndpoint',
-      'watchEndpoint',
-      'videoId',
-    ]) as String?;
-  }
-  if (videoId == null || videoId.isEmpty && runs != null && runs.isNotEmpty) {
+  var videoId = renderer['playlistItemData']?['videoId'] as String?;
+  videoId ??= digValue(renderer, <String>[
+    'navigationEndpoint',
+    'watchEndpoint',
+    'videoId',
+  ]) as String?;
+
+  if ((videoId == null || videoId.isEmpty) &&
+      runs != null &&
+      runs.isNotEmpty) {
     videoId = digValue(runs.first, <String>[
       'navigationEndpoint',
       'watchEndpoint',
@@ -89,8 +90,6 @@ SearchSuggestion? _parseMediaRow(Map<String, dynamic> renderer) {
     ]) as String?;
   }
 
-  return SearchSuggestion(
-    query: title,
-    videoId: (videoId == null || videoId.isEmpty) ? null : videoId,
-  );
+  final resolved = (videoId == null || videoId.isEmpty) ? null : videoId;
+  return SearchSuggestion(query: title, videoId: resolved);
 }

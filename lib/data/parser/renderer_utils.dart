@@ -154,12 +154,18 @@ List<Artist> parseArtists(Object? runs) {
 
 /// True for the non-credit lines InnerTube mixes into subtitles: view counts,
 /// subscriber counts, release years and type badges.
+///
+/// Subtitles interleave credits with metadata — "Imagine Dragons • 2021" — and
+/// a bare four-digit run is always the release year, never an artist.
 bool isMetadataText(String text) {
   final lower = text.toLowerCase();
   if (lower.endsWith('views') ||
       lower.endsWith('plays') ||
       lower.endsWith('subscribers') ||
       lower.contains('monthly audience')) {
+    return true;
+  }
+  if (RegExp(r'^(19|20)\d{2}$').hasMatch(text)) {
     return true;
   }
   const badges = <String>{

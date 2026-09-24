@@ -1,11 +1,10 @@
-// ignore_for_file: avoid_print
-import 'package:app/data/network/innertube_client.dart';
+import 'package:app/core/network/innertube_client.dart';
+import 'package:app/core/network/youtube_client.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void main() {
-  test('InnertubeClient search returns status 200 and valid JSON data', () async {
-    final client = InnertubeClient();
-    final result = await client.search('test');
+import 'fixtures/fake_http_adapter.dart';
+import 'fixtures/innertube_fixtures.dart';
 
     expect(result, isNotEmpty);
     expect(result.containsKey('responseContext'), isTrue);

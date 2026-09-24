@@ -3,10 +3,11 @@ import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'dio_client.dart';
 import 'youtube_client.dart';
 
 final innertubeClientProvider = Provider<InnertubeClient>((ref) {
-  return InnertubeClient();
+  return InnertubeClient(dio: ref.watch(dioProvider));
 });
 
 /// Thrown when InnerTube answers with an HTTP error or an unusable body after
@@ -20,10 +21,7 @@ class InnertubeException implements Exception {
 
   @override
   String toString() {
-    final where = <String>[
-      if (endpoint != null) endpoint,
-      if (clientName != null) clientName,
-    ].join('/');
+    final where = <String?>[endpoint, clientName].whereType<String>().join('/');
     return where.isEmpty ? message : 'InnertubeException($where): $message';
   }
 }
@@ -42,8 +40,6 @@ class InnertubeClient {
     : _dio = dio ?? _createDefaultDio(),
       _locale = locale ?? const YouTubeLocale();
 
-  static const String _baseUrl = 'https://music.youtube.com/youtubei/v1/';
-
   final Dio _dio;
   YouTubeLocale _locale;
 
@@ -56,10 +52,12 @@ class InnertubeClient {
 
   set locale(YouTubeLocale value) => _locale = value;
 
+  /// Fallback wiring for callers that are not inside a [ProviderScope]
+  /// (tests and one-off scripts). The app uses `dioProvider`.
   static Dio _createDefaultDio() {
     return Dio(
       BaseOptions(
-        baseUrl: _baseUrl,
+        baseUrl: innertubeBaseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 20),
         responseType: ResponseType.json,

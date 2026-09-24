@@ -1,30 +1,60 @@
-// ignore_for_file: avoid_print
-import 'package:app/data/network/innertube_client.dart';
 import 'package:app/data/parser/stream_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// `extractAudioStreamUrl` is the deprecated InnerTube-based extractor kept
+/// around for `player` responses that still carry a plain `url`. These cases
+/// pin the behaviour the repository relies on when it falls back to it.
 void main() {
-  test('Test getPlayerInfo and stream parsing across multiple videoIds', () async {
-    final client = InnertubeClient();
+  Map<String, dynamic> playerWith(List<Map<String, dynamic>> formats) =>
+      <String, dynamic>{
+        'streamingData': <String, dynamic>{
+          'adaptiveFormats': formats,
+        },
+      };
 
-    // Test multiple popular song videoIds
-    final testVideoIds = [
-      {'id': 'TO-_3tck2tg', 'title': 'Imagine Dragons - Bones'},
-      {'id': 'JGwWNGJdvx8', 'title': 'Ed Sheeran - Shape of You'},
-      {'id': 'YQHsXMglC9A', 'title': 'Adele - Hello'},
-      {'id': 'fJ9rUzIMcZQ', 'title': 'Queen - Bohemian Rhapsody'},
-      {'id': 'kJQP7kiw5Fk', 'title': 'Luis Fonsi - Despacito'},
-    ];
+  Map<String, dynamic> audioFormat({
+    required int bitrate,
+    String? url,
+    String? cipher,
+    String mimeType = 'audio/webm; codecs="opus"',
+  }) {
+    return <String, dynamic>{
+      'mimeType': mimeType,
+      'bitrate': bitrate,
+      if (url != null) 'url': url,
+      if (cipher != null) 'signatureCipher': cipher,
+    };
+  }
 
-    var directUrlCount = 0;
-    var cipherCount = 0;
+  group('extractAudioStreamUrl', () {
+    test('picks the highest-bitrate audio format', () {
+      final url = extractAudioStreamUrl(
+        playerWith(<Map<String, dynamic>>[
+          audioFormat(bitrate: 64000, url: 'https://example.com/low'),
+          audioFormat(bitrate: 256000, url: 'https://example.com/high'),
+          audioFormat(bitrate: 128000, url: 'https://example.com/mid'),
+          // A video-only format must never win, however high its bitrate.
+          <String, dynamic>{
+            'mimeType': 'video/mp4',
+            'bitrate': 4000000,
+            'url': 'https://example.com/video',
+          },
+        ]),
+      );
 
-    for (final item in testVideoIds) {
-      final videoId = item['id']!;
-      final title = item['title']!;
+      expect(url, 'https://example.com/high');
+    });
 
-      print('\nTesting player info for: $title ($videoId)...');
-      final playerJson = await client.getPlayerInfo(videoId);
+    test('ignores non-audio formats entirely', () {
+      final url = extractAudioStreamUrl(
+        playerWith(<Map<String, dynamic>>[
+          <String, dynamic>{
+            'mimeType': 'video/mp4',
+            'bitrate': 4000000,
+            'url': 'https://example.com/video',
+          },
+        ]),
+      );
 
       final streamingData =
           playerJson['streamingData'] as Map<String, dynamic>?;

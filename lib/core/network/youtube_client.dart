@@ -10,6 +10,9 @@
 /// the repository fall back to another client when one of them fails.
 library;
 
+/// Every InnerTube endpoint is a relative path under this base URL.
+const String innertubeBaseUrl = 'https://music.youtube.com/youtubei/v1/';
+
 class YouTubeLocale {
   const YouTubeLocale({this.gl = 'US', this.hl = 'en'});
 
