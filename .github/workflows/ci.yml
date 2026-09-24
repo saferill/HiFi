@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-and-test:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned to the exact Flutter revision this project was created with
+      # (.metadata revision), because pubspec.yaml requires Dart >=3.14.0-201.0.dev.
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 882e0b7d56e74a3f710470177027ae101e1f358e
+          cache: true
+
+      - name: Report toolchain
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos
+
+      - name: Test
+        run: flutter test --reporter expanded
