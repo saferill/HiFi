@@ -13,15 +13,12 @@ void main() {
     test('returns every shelf in order, skipping empty ones', () {
       final page = parseBrowsePage(homeBrowseResponse());
 
-      expect(
-        page.sections.map((s) => s.title).toList(),
-        <String?>[
-          'Quick picks',
-          'New releases',
-          'Moods & genres',
-          'Mixed for you',
-        ],
-      );
+      expect(page.sections.map((s) => s.title).toList(), <String?>[
+        'Quick picks',
+        'New releases',
+        'Moods & genres',
+        'Mixed for you',
+      ]);
       expect(page.sections.every((s) => !s.isEmpty), isTrue);
     });
 
@@ -44,8 +41,7 @@ void main() {
     });
 
     test('parses album cards with their playlist id and artist credit', () {
-      final newReleases =
-          parseBrowsePage(homeBrowseResponse()).sections[1];
+      final newReleases = parseBrowsePage(homeBrowseResponse()).sections[1];
 
       expect(newReleases.albums, hasLength(1));
       final album = newReleases.albums.single;
@@ -91,18 +87,17 @@ void main() {
 
     test('collects every track on the page via allSongs', () {
       final page = parseBrowsePage(homeBrowseResponse());
-      expect(
-        page.allSongs.map((s) => s.videoId).toList(),
-        <String>['TO-_3tck2tg', 'D9G1VOjN_84', 'kJQP7kiw5Fk'],
-      );
+      expect(page.allSongs.map((s) => s.videoId).toList(), <String>[
+        'TO-_3tck2tg',
+        'D9G1VOjN_84',
+        'kJQP7kiw5Fk',
+      ]);
     });
 
     test('degrades to an empty page instead of throwing', () {
       expect(parseBrowsePage(<String, dynamic>{}).sections, isEmpty);
       expect(
-        parseBrowsePage(<String, dynamic>{
-          'contents': 'not a map',
-        }).sections,
+        parseBrowsePage(<String, dynamic>{'contents': 'not a map'}).sections,
         isEmpty,
       );
       expect(

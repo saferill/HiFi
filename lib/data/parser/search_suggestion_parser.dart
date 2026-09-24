@@ -80,9 +80,7 @@ SearchSuggestion? _parseMediaRow(Map<String, dynamic> renderer) {
     'videoId',
   ]) as String?;
 
-  if ((videoId == null || videoId.isEmpty) &&
-      runs != null &&
-      runs.isNotEmpty) {
+  if ((videoId == null || videoId.isEmpty) && runs != null && runs.isNotEmpty) {
     videoId = digValue(runs.first, <String>[
       'navigationEndpoint',
       'watchEndpoint',

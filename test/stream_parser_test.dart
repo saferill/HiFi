@@ -7,9 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   Map<String, dynamic> playerWith(List<Map<String, dynamic>> formats) =>
       <String, dynamic>{
-        'streamingData': <String, dynamic>{
-          'adaptiveFormats': formats,
-        },
+        'streamingData': <String, dynamic>{'adaptiveFormats': formats},
       };
 
   Map<String, dynamic> audioFormat({

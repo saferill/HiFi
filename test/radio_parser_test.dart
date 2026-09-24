@@ -9,8 +9,10 @@ void main() {
       final result = parseRadioResponse(radioResponse());
 
       expect(result.songs, hasLength(2));
-      expect(result.songs.map((s) => s.videoId).toList(),
-          <String>['TO-_3tck2tg', 'D9G1VOjN_84']);
+      expect(result.songs.map((s) => s.videoId).toList(), <String>[
+        'TO-_3tck2tg',
+        'D9G1VOjN_84',
+      ]);
     });
 
     test('parses title, byline, length and artwork of each track', () {

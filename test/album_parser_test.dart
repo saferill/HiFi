@@ -26,8 +26,10 @@ void main() {
     });
 
     test('parses the track list in order, with durations and set ids', () {
-      expect(result.songs.map((s) => s.title).toList(),
-          <String>['My Life', 'Enemy']);
+      expect(result.songs.map((s) => s.title).toList(), <String>[
+        'My Life',
+        'Enemy',
+      ]);
 
       final myLife = result.songs.first;
       expect(myLife.videoId, 'TO-_3tck2tg');
@@ -47,9 +49,7 @@ void main() {
     test('returns null when there is no track shelf to read', () {
       expect(parseAlbumPage(<String, dynamic>{}), isNull);
       expect(
-        parseAlbumPage(<String, dynamic>{
-          'header': <String, dynamic>{},
-        }),
+        parseAlbumPage(<String, dynamic>{'header': <String, dynamic>{}}),
         isNull,
       );
     });

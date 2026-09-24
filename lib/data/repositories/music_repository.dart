@@ -19,8 +19,10 @@ final musicRepositoryProvider = Provider<MusicRepository>((ref) {
 });
 
 /// Search results for a query. Empty queries short-circuit without a request.
-final searchSongsProvider =
-    FutureProvider.family<List<Song>, String>((ref, query) async {
+final searchSongsProvider = FutureProvider.family<List<Song>, String>((
+  ref,
+  query,
+) async {
   if (query.trim().isEmpty) {
     return const <Song>[];
   }
@@ -30,20 +32,24 @@ final searchSongsProvider =
 /// Typeahead suggestions for the search box.
 final searchSuggestionsProvider =
     FutureProvider.family<List<SearchSuggestion>, String>((ref, input) async {
-  if (input.trim().isEmpty) {
-    return const <SearchSuggestion>[];
-  }
-  return ref.watch(musicRepositoryProvider).getSearchSuggestions(input);
-});
+      if (input.trim().isEmpty) {
+        return const <SearchSuggestion>[];
+      }
+      return ref.watch(musicRepositoryProvider).getSearchSuggestions(input);
+    });
 
 /// A browse page — Home, Charts, Moods & Genres, or a "more from shelf" page.
 ///
 /// Keyed on `browseId` plus `params` because the same `browseId` returns
 /// different shelves for different `params` (every mood tile shares
 /// `FEmusic_moods_and_genres_category`).
-final browsePageProvider =
-    FutureProvider.family<BrowsePage, BrowseRequest>((ref, request) async {
-  return ref.watch(musicRepositoryProvider).getBrowsePage(
+final browsePageProvider = FutureProvider.family<BrowsePage, BrowseRequest>((
+  ref,
+  request,
+) async {
+  return ref
+      .watch(musicRepositoryProvider)
+      .getBrowsePage(
         request.browseId,
         params: request.params,
         countryCode: request.countryCode,
@@ -51,8 +57,10 @@ final browsePageProvider =
 });
 
 /// The full track list behind an album or playlist card.
-final albumPageProvider =
-    FutureProvider.family<AlbumPageResult?, String>((ref, browseId) async {
+final albumPageProvider = FutureProvider.family<AlbumPageResult?, String>((
+  ref,
+  browseId,
+) async {
   return ref.watch(musicRepositoryProvider).getAlbumPage(browseId);
 });
 
@@ -93,10 +101,7 @@ class BrowseIds {
 }
 
 class MusicRepository {
-  MusicRepository({
-    required this.innertubeClient,
-    required this.streamService,
-  });
+  MusicRepository({required this.innertubeClient, required this.streamService});
 
   final InnertubeClient innertubeClient;
   final StreamService streamService;
