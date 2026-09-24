@@ -9,8 +9,10 @@ void main() {
       final songs = parseSearchResults(searchResponse());
 
       expect(songs, hasLength(2));
-      expect(songs.map((s) => s.videoId).toList(),
-          <String>['TO-_3tck2tg', 'D9G1VOjN_84']);
+      expect(songs.map((s) => s.videoId).toList(), <String>[
+        'TO-_3tck2tg',
+        'D9G1VOjN_84',
+      ]);
     });
 
     test('reads title, artist, duration and artwork of the top result', () {
@@ -36,10 +38,14 @@ void main() {
 
     test('never returns the same video twice', () {
       final json = searchResponse();
-      final shelf = ((json['contents'] as Map<String, dynamic>)[
-              'tabbedSearchResultsRenderer'] as Map<String, dynamic>)['tabs'] as List;
-      final sectionList = ((shelf.first as Map<String, dynamic>)['tabRenderer']
-          as Map<String, dynamic>)['content'];
+      final shelf =
+          ((json['contents']
+                      as Map<String, dynamic>)['tabbedSearchResultsRenderer']
+                  as Map<String, dynamic>)['tabs']
+              as List;
+      final sectionList =
+          ((shelf.first as Map<String, dynamic>)['tabRenderer']
+              as Map<String, dynamic>)['content'];
       final contents =
           (sectionList as Map<String, dynamic>)['sectionListRenderer']
               as Map<String, dynamic>;

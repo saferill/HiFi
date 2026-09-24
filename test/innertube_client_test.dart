@@ -15,17 +15,14 @@ void main() {
     YouTubeLocale locale = const YouTubeLocale(gl: 'ID', hl: 'id'),
   }) {
     adapter = FakeHttpAdapter(responses);
-    dio = Dio(
-      BaseOptions(baseUrl: 'https://music.youtube.com/youtubei/v1/'),
-    )..httpClientAdapter = adapter;
+    dio = Dio(BaseOptions(baseUrl: 'https://music.youtube.com/youtubei/v1/'))
+      ..httpClientAdapter = adapter;
     return InnertubeClient(dio: dio, locale: locale);
   }
 
   group('search', () {
     test('posts a WEB_REMIX context, the query and the API key', () async {
-      final client = clientWith(<FakeResponse>[
-        FakeResponse(searchResponse()),
-      ]);
+      final client = clientWith(<FakeResponse>[FakeResponse(searchResponse())]);
 
       final data = await client.search('imagine dragons bones');
 
@@ -47,9 +44,7 @@ void main() {
     });
 
     test('passes the filter params and the continuation through', () async {
-      final client = clientWith(<FakeResponse>[
-        FakeResponse(searchResponse()),
-      ]);
+      final client = clientWith(<FakeResponse>[FakeResponse(searchResponse())]);
 
       await client.search(
         'imagine dragons',
@@ -68,30 +63,32 @@ void main() {
   });
 
   group('client fallback', () {
-    test('retries the next client when a response carries no contents',
-        () async {
-      final client = clientWith(<FakeResponse>[
-        FakeResponse(<String, dynamic>{}),
-        FakeResponse(searchResponse()),
-      ]);
+    test(
+      'retries the next client when a response carries no contents',
+      () async {
+        final client = clientWith(<FakeResponse>[
+          FakeResponse(<String, dynamic>{}),
+          FakeResponse(searchResponse()),
+        ]);
 
-      final data = await client.search('bones');
+        final data = await client.search('bones');
 
-      expect(data['contents'], isNotNull);
-      expect(adapter.requests, hasLength(2));
-      expect(
-        adapter.requestBodies[0]['context']['client']['clientName'],
-        'WEB_REMIX',
-      );
-      expect(
-        adapter.requestBodies[1]['context']['client']['clientName'],
-        'ANDROID_MUSIC',
-      );
-      expect(
-        adapter.requests[1].queryParameters['key'],
-        YouTubeClient.androidMusic.apiKey,
-      );
-    });
+        expect(data['contents'], isNotNull);
+        expect(adapter.requests, hasLength(2));
+        expect(
+          adapter.requestBodies[0]['context']['client']['clientName'],
+          'WEB_REMIX',
+        );
+        expect(
+          adapter.requestBodies[1]['context']['client']['clientName'],
+          'ANDROID_MUSIC',
+        );
+        expect(
+          adapter.requests[1].queryParameters['key'],
+          YouTubeClient.androidMusic.apiKey,
+        );
+      },
+    );
 
     test('retries on an HTTP error too', () async {
       final client = clientWith(<FakeResponse>[
@@ -139,41 +136,45 @@ void main() {
   });
 
   group('visitorData', () {
-    test('is captured from the first response and sent on the next request',
-        () async {
-      final client = clientWith(<FakeResponse>[
-        FakeResponse(searchResponse()),
-        FakeResponse(searchSuggestionsResponse()),
-      ]);
+    test(
+      'is captured from the first response and sent on the next request',
+      () async {
+        final client = clientWith(<FakeResponse>[
+          FakeResponse(searchResponse()),
+          FakeResponse(searchSuggestionsResponse()),
+        ]);
 
-      await client.search('bones');
-      expect(client.visitorData, 'visitor-1');
-      expect(
-        adapter.requests[0].headers.containsKey('X-Goog-Visitor-Id'),
-        isFalse,
-      );
+        await client.search('bones');
+        expect(client.visitorData, 'visitor-1');
+        expect(
+          adapter.requests[0].headers.containsKey('X-Goog-Visitor-Id'),
+          isFalse,
+        );
 
-      await client.getSearchSuggestions('bon');
-      expect(adapter.requests[1].headers['X-Goog-Visitor-Id'], 'visitor-1');
-      expect(
-        adapter.requestBodies[1]['context']['client']['visitorData'],
-        'visitor-1',
-      );
-    });
+        await client.getSearchSuggestions('bon');
+        expect(adapter.requests[1].headers['X-Goog-Visitor-Id'], 'visitor-1');
+        expect(
+          adapter.requestBodies[1]['context']['client']['visitorData'],
+          'visitor-1',
+        );
+      },
+    );
   });
 
   group('endpoints', () {
-    test('getSearchSuggestions posts to music/get_search_suggestions',
-        () async {
-      final client = clientWith(<FakeResponse>[
-        FakeResponse(searchSuggestionsResponse()),
-      ]);
+    test(
+      'getSearchSuggestions posts to music/get_search_suggestions',
+      () async {
+        final client = clientWith(<FakeResponse>[
+          FakeResponse(searchSuggestionsResponse()),
+        ]);
 
-      await client.getSearchSuggestions('imagine');
+        await client.getSearchSuggestions('imagine');
 
-      expect(adapter.requests.single.path, 'music/get_search_suggestions');
-      expect(adapter.requestBodies.single['input'], 'imagine');
-    });
+        expect(adapter.requests.single.path, 'music/get_search_suggestions');
+        expect(adapter.requestBodies.single['input'], 'imagine');
+      },
+    );
 
     test('browse sends the browseId, params and alt=json', () async {
       final client = clientWith(<FakeResponse>[
@@ -208,18 +209,20 @@ void main() {
       );
     });
 
-    test('getWatchNext defaults the playlist id to the video radio mix',
-        () async {
-      final client = clientWith(<FakeResponse>[
-        FakeResponse(radioResponse()),
-      ]);
+    test(
+      'getWatchNext defaults the playlist id to the video radio mix',
+      () async {
+        final client = clientWith(<FakeResponse>[
+          FakeResponse(radioResponse()),
+        ]);
 
-      await client.getWatchNext(videoId: 'TO-_3tck2tg');
+        await client.getWatchNext(videoId: 'TO-_3tck2tg');
 
-      final body = adapter.requestBodies.single;
-      expect(adapter.requests.single.path, 'next');
-      expect(body['videoId'], 'TO-_3tck2tg');
-      expect(body['playlistId'], 'RDAMVMTO-_3tck2tg');
-    });
+        final body = adapter.requestBodies.single;
+        expect(adapter.requests.single.path, 'next');
+        expect(body['videoId'], 'TO-_3tck2tg');
+        expect(body['playlistId'], 'RDAMVMTO-_3tck2tg');
+      },
+    );
   });
 }

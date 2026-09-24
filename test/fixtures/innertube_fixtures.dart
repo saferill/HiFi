@@ -43,11 +43,7 @@ Map<String, dynamic> _browseRun(
 Map<String, dynamic> _thumbnails(String base, {int size = 120}) {
   return <String, dynamic>{
     'thumbnails': <dynamic>[
-      <String, dynamic>{
-        'url': '$base=w60-h60',
-        'width': 60,
-        'height': 60,
-      },
+      <String, dynamic>{'url': '$base=w60-h60', 'width': 60, 'height': 60},
       <String, dynamic>{
         'url': '$base=w$size-h$size',
         'width': size,
@@ -58,10 +54,10 @@ Map<String, dynamic> _thumbnails(String base, {int size = 120}) {
 }
 
 Map<String, dynamic> _explicitBadge() => <String, dynamic>{
-      'musicInlineBadgeRenderer': <String, dynamic>{
-        'icon': <String, dynamic>{'iconType': 'MUSIC_EXPLICIT_BADGE'},
-      },
-    };
+  'musicInlineBadgeRenderer': <String, dynamic>{
+    'icon': <String, dynamic>{'iconType': 'MUSIC_EXPLICIT_BADGE'},
+  },
+};
 
 // ---------------------------------------------------------------------------
 // music/get_search_suggestions
@@ -98,25 +94,23 @@ Map<String, dynamic> searchSuggestionsResponse() {
             // A media row: same list, but it carries a real track.
             <String, dynamic>{
               'musicResponsiveListItemRenderer': <String, dynamic>{
-                'playlistItemData': <String, dynamic>{
-                  'videoId': 'TO-_3tck2tg',
-                },
+                'playlistItemData': <String, dynamic>{'videoId': 'TO-_3tck2tg'},
                 'flexColumns': <dynamic>[
                   <String, dynamic>{
                     'musicResponsiveListItemFlexColumnRenderer':
                         <String, dynamic>{
-                      'text': _runs(<Map<String, dynamic>>[
-                        _textRun('Bones'),
-                      ]),
-                    },
+                          'text': _runs(<Map<String, dynamic>>[
+                            _textRun('Bones'),
+                          ]),
+                        },
                   },
                   <String, dynamic>{
                     'musicResponsiveListItemFlexColumnRenderer':
                         <String, dynamic>{
-                      'text': _runs(<Map<String, dynamic>>[
-                        _textRun('Imagine Dragons'),
-                      ]),
-                    },
+                          'text': _runs(<Map<String, dynamic>>[
+                            _textRun('Imagine Dragons'),
+                          ]),
+                        },
                   },
                 ],
               },
@@ -151,10 +145,10 @@ Map<String, dynamic> homeBrowseResponse() {
                         'header': <String, dynamic>{
                           'musicCarouselShelfBasicHeaderRenderer':
                               <String, dynamic>{
-                            'title': _runs(<Map<String, dynamic>>[
-                              _textRun('Quick picks'),
-                            ]),
-                          },
+                                'title': _runs(<Map<String, dynamic>>[
+                                  _textRun('Quick picks'),
+                                ]),
+                              },
                         },
                         'contents': <dynamic>[
                           <String, dynamic>{
@@ -174,8 +168,7 @@ Map<String, dynamic> homeBrowseResponse() {
                                   ),
                                 },
                               },
-                              'aspectRatio':
-                                  'MUSIC_TWO_ROW_ITEM_THUMBNAIL_ASPECT_RATIO_SQUARE',
+                              'aspectRatio': 'MUSIC_TWO_ROW_ITEM_THUMBNAIL_ASPECT_RATIO_SQUARE',
                               'navigationEndpoint': <String, dynamic>{
                                 'watchEndpoint': <String, dynamic>{
                                   'videoId': 'TO-_3tck2tg',
@@ -204,9 +197,7 @@ Map<String, dynamic> homeBrowseResponse() {
                                   'videoId': 'D9G1VOjN_84',
                                 },
                               },
-                              'subtitleBadges': <dynamic>[
-                                _explicitBadge(),
-                              ],
+                              'subtitleBadges': <dynamic>[_explicitBadge()],
                             },
                           },
                         ],
@@ -218,20 +209,20 @@ Map<String, dynamic> homeBrowseResponse() {
                         'header': <String, dynamic>{
                           'musicCarouselShelfBasicHeaderRenderer':
                               <String, dynamic>{
-                            'title': _runs(<Map<String, dynamic>>[
-                              _textRun('New releases'),
-                            ]),
-                            'moreContentButton': <String, dynamic>{
-                              'buttonRenderer': <String, dynamic>{
-                                'navigationEndpoint': <String, dynamic>{
-                                  'browseEndpoint': <String, dynamic>{
-                                    'browseId': 'FEmusic_new_releases',
-                                    'params': 'ggM8SgQIBxAB',
+                                'title': _runs(<Map<String, dynamic>>[
+                                  _textRun('New releases'),
+                                ]),
+                                'moreContentButton': <String, dynamic>{
+                                  'buttonRenderer': <String, dynamic>{
+                                    'navigationEndpoint': <String, dynamic>{
+                                      'browseEndpoint': <String, dynamic>{
+                                        'browseId': 'FEmusic_new_releases',
+                                        'params': 'ggM8SgQIBxAB',
+                                      },
+                                    },
                                   },
                                 },
                               },
-                            },
-                          },
                         },
                         'contents': <dynamic>[
                           <String, dynamic>{
@@ -259,29 +250,30 @@ Map<String, dynamic> homeBrowseResponse() {
                                   'browseId': 'MPREb_9nqEki4ZLQ4',
                                   'browseEndpointContextSupportedConfigs':
                                       <String, dynamic>{
-                                    'browseEndpointContextMusicConfig':
-                                        <String, dynamic>{
-                                      'pageType': 'MUSIC_PAGE_TYPE_ALBUM',
-                                    },
-                                  },
+                                        'browseEndpointContextMusicConfig':
+                                            <String, dynamic>{
+                                              'pageType':
+                                                  'MUSIC_PAGE_TYPE_ALBUM',
+                                            },
+                                      },
                                 },
                               },
                               'thumbnailOverlay': <String, dynamic>{
                                 'musicItemThumbnailOverlayRenderer':
                                     <String, dynamic>{
-                                  'content': <String, dynamic>{
-                                    'musicPlayButtonRenderer':
-                                        <String, dynamic>{
-                                      'playNavigationEndpoint':
-                                          <String, dynamic>{
-                                        'watchPlaylistEndpoint':
+                                      'content': <String, dynamic>{
+                                        'musicPlayButtonRenderer':
                                             <String, dynamic>{
-                                          'playlistId': 'OLAK5uy_kMercury',
-                                        },
+                                              'playNavigationEndpoint':
+                                                  <String, dynamic>{
+                                                    'watchPlaylistEndpoint':
+                                                        <String, dynamic>{
+                                                          'playlistId': 'OLAK5uy_kMercury',
+                                                        },
+                                                  },
+                                            },
                                       },
                                     },
-                                  },
-                                },
                               },
                               'subtitleBadges': <dynamic>[],
                             },
@@ -301,8 +293,7 @@ Map<String, dynamic> homeBrowseResponse() {
                         },
                         'items': <dynamic>[
                           <String, dynamic>{
-                            'musicNavigationButtonRenderer':
-                                <String, dynamic>{
+                            'musicNavigationButtonRenderer': <String, dynamic>{
                               'buttonText': _runs(<Map<String, dynamic>>[
                                 _textRun('Chill'),
                               ]),
@@ -319,8 +310,7 @@ Map<String, dynamic> homeBrowseResponse() {
                             },
                           },
                           <String, dynamic>{
-                            'musicNavigationButtonRenderer':
-                                <String, dynamic>{
+                            'musicNavigationButtonRenderer': <String, dynamic>{
                               'buttonText': _runs(<Map<String, dynamic>>[
                                 _textRun('Workout'),
                               ]),
@@ -347,8 +337,7 @@ Map<String, dynamic> homeBrowseResponse() {
                         ]),
                         'contents': <dynamic>[
                           <String, dynamic>{
-                            'musicResponsiveListItemRenderer':
-                                <String, dynamic>{
+                            'musicResponsiveListItemRenderer': <String, dynamic>{
                               'playlistItemData': <String, dynamic>{
                                 'videoId': 'kJQP7kiw5Fk',
                               },
@@ -356,38 +345,39 @@ Map<String, dynamic> homeBrowseResponse() {
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('Despacito'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('Despacito'),
+                                        ]),
+                                      },
                                 },
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _browseRun(
-                                        'Luis Fonsi',
-                                        browseId: 'UCxoq-PAQeAdk_zyg8YS0JqA',
-                                        pageType: 'MUSIC_PAGE_TYPE_ARTIST',
-                                      ),
-                                      _textRun(' • '),
-                                      _browseRun(
-                                        'Vida',
-                                        browseId: 'MPREb_xyzVida',
-                                        pageType: 'MUSIC_PAGE_TYPE_ALBUM',
-                                      ),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _browseRun(
+                                            'Luis Fonsi',
+                                            browseId:
+                                                'UCxoq-PAQeAdk_zyg8YS0JqA',
+                                            pageType: 'MUSIC_PAGE_TYPE_ARTIST',
+                                          ),
+                                          _textRun(' • '),
+                                          _browseRun(
+                                            'Vida',
+                                            browseId: 'MPREb_xyzVida',
+                                            pageType: 'MUSIC_PAGE_TYPE_ALBUM',
+                                          ),
+                                        ]),
+                                      },
                                 },
                               ],
                               'fixedColumns': <dynamic>[
                                 <String, dynamic>{
                                   'musicResponsiveListItemFixedColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('4:41'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('4:41'),
+                                        ]),
+                                      },
                                 },
                               ],
                               'thumbnail': <String, dynamic>{
@@ -467,8 +457,7 @@ Map<String, dynamic> albumBrowseResponse() {
                         'playlistId': 'OLAK5uy_kMercury',
                         'contents': <dynamic>[
                           <String, dynamic>{
-                            'musicResponsiveListItemRenderer':
-                                <String, dynamic>{
+                            'musicResponsiveListItemRenderer': <String, dynamic>{
                               'playlistItemData': <String, dynamic>{
                                 'videoId': 'TO-_3tck2tg',
                                 'playlistSetVideoId': 'set-1',
@@ -477,28 +466,28 @@ Map<String, dynamic> albumBrowseResponse() {
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('My Life'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('My Life'),
+                                        ]),
+                                      },
                                 },
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('Imagine Dragons'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('Imagine Dragons'),
+                                        ]),
+                                      },
                                 },
                               ],
                               'fixedColumns': <dynamic>[
                                 <String, dynamic>{
                                   'musicResponsiveListItemFixedColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('3:44'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('3:44'),
+                                        ]),
+                                      },
                                 },
                               ],
                               'thumbnail': <String, dynamic>{
@@ -512,8 +501,7 @@ Map<String, dynamic> albumBrowseResponse() {
                             },
                           },
                           <String, dynamic>{
-                            'musicResponsiveListItemRenderer':
-                                <String, dynamic>{
+                            'musicResponsiveListItemRenderer': <String, dynamic>{
                               'playlistItemData': <String, dynamic>{
                                 'videoId': 'D9G1VOjN_84',
                                 'playlistSetVideoId': 'set-2',
@@ -522,28 +510,28 @@ Map<String, dynamic> albumBrowseResponse() {
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('Enemy'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('Enemy'),
+                                        ]),
+                                      },
                                 },
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('Imagine Dragons'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('Imagine Dragons'),
+                                        ]),
+                                      },
                                 },
                               ],
                               'fixedColumns': <dynamic>[
                                 <String, dynamic>{
                                   'musicResponsiveListItemFixedColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('3:53'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('3:53'),
+                                        ]),
+                                      },
                                 },
                               ],
                               'thumbnail': <String, dynamic>{
@@ -597,17 +585,14 @@ Map<String, dynamic> radioResponse() {
                         'playlistPanelRenderer': <String, dynamic>{
                           'contents': <dynamic>[
                             <String, dynamic>{
-                              'playlistPanelVideoRenderer':
-                                  <String, dynamic>{
+                              'playlistPanelVideoRenderer': <String, dynamic>{
                                 'videoId': 'TO-_3tck2tg',
                                 'title': _runs(<Map<String, dynamic>>[
                                   _textRun('Bones'),
                                 ]),
-                                'longBylineText': _runs(
-                                  <Map<String, dynamic>>[
-                                    _textRun('Imagine Dragons'),
-                                  ],
-                                ),
+                                'longBylineText': _runs(<Map<String, dynamic>>[
+                                  _textRun('Imagine Dragons'),
+                                ]),
                                 'lengthText': _runs(<Map<String, dynamic>>[
                                   _textRun('2:46'),
                                 ]),
@@ -617,17 +602,14 @@ Map<String, dynamic> radioResponse() {
                               },
                             },
                             <String, dynamic>{
-                              'playlistPanelVideoRenderer':
-                                  <String, dynamic>{
+                              'playlistPanelVideoRenderer': <String, dynamic>{
                                 'videoId': 'D9G1VOjN_84',
                                 'title': _runs(<Map<String, dynamic>>[
                                   _textRun('Enemy'),
                                 ]),
-                                'shortBylineText': _runs(
-                                  <Map<String, dynamic>>[
-                                    _textRun('Imagine Dragons'),
-                                  ],
-                                ),
+                                'shortBylineText': _runs(<Map<String, dynamic>>[
+                                  _textRun('Imagine Dragons'),
+                                ]),
                                 'lengthText': _runs(<Map<String, dynamic>>[
                                   _textRun('3:53'),
                                 ]),
@@ -639,8 +621,7 @@ Map<String, dynamic> radioResponse() {
                           ],
                           'continuations': <dynamic>[
                             <String, dynamic>{
-                              'nextRadioContinuationData':
-                                  <String, dynamic>{
+                              'nextRadioContinuationData': <String, dynamic>{
                                 'continuation': 'radio-page-2',
                               },
                             },
@@ -707,8 +688,7 @@ Map<String, dynamic> searchResponse() {
                       'musicShelfRenderer': <String, dynamic>{
                         'contents': <dynamic>[
                           <String, dynamic>{
-                            'musicResponsiveListItemRenderer':
-                                <String, dynamic>{
+                            'musicResponsiveListItemRenderer': <String, dynamic>{
                               'playlistItemData': <String, dynamic>{
                                 'videoId': 'D9G1VOjN_84',
                               },
@@ -716,22 +696,22 @@ Map<String, dynamic> searchResponse() {
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('Enemy'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('Enemy'),
+                                        ]),
+                                      },
                                 },
                                 <String, dynamic>{
                                   'musicResponsiveListItemFlexColumnRenderer':
                                       <String, dynamic>{
-                                    'text': _runs(<Map<String, dynamic>>[
-                                      _textRun('Imagine Dragons'),
-                                      _textRun(' • '),
-                                      _textRun('Mercury - Act 1'),
-                                      _textRun(' • '),
-                                      _textRun('3:53'),
-                                    ]),
-                                  },
+                                        'text': _runs(<Map<String, dynamic>>[
+                                          _textRun('Imagine Dragons'),
+                                          _textRun(' • '),
+                                          _textRun('Mercury - Act 1'),
+                                          _textRun(' • '),
+                                          _textRun('3:53'),
+                                        ]),
+                                      },
                                 },
                               ],
                               'thumbnail': <String, dynamic>{
