@@ -17,6 +17,15 @@ void main() {
     FakeMusicRepository? repository,
   }) async {
     final fake = repository ?? FakeMusicRepository();
+
+    // The default test surface is 800x600, which only fits the first shelf of
+    // the Home feed. A phone-sized-but-tall surface lets the assertions reach
+    // every section instead of depending on what happens to be above the fold.
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       ProviderScope(
         // No explicit type argument: the `Override` type is not exported

@@ -66,6 +66,11 @@ class BrowseScreen extends ConsumerWidget {
   }
 }
 
+/// Carousel geometry. The card is exactly as tall as the artwork plus the
+/// label block below it, and the shelf reserves that much vertical space.
+const double _cardArtSize = 140;
+const double _carouselHeight = 212;
+
 class _Section extends StatelessWidget {
   const _Section({required this.section, required this.onPlaySong});
 
@@ -95,7 +100,7 @@ class _Section extends StatelessWidget {
             ),
           ),
         SizedBox(
-          height: 200,
+          height: _carouselHeight,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -317,30 +322,42 @@ class _Card extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SizedBox(
-      width: 140,
+      width: _cardArtSize,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Artwork(url: imageUrl, size: 140, radius: circular ? 70 : 12),
+            Artwork(url: imageUrl, size: _cardArtSize, radius: circular ? 70 : 12),
             const SizedBox(height: 8),
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isHighlighted ? theme.colorScheme.primary : null,
-              ),
-            ),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            // The labels take whatever height is left, so a two-line title
+            // cannot push the column past the carousel's fixed height.
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Flexible(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isHighlighted ? theme.colorScheme.primary : null,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
