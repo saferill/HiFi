@@ -47,15 +47,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(selectedTab == 0 ? 'HiFi' : 'Search'),
-      ),
+      appBar: AppBar(title: Text(selectedTab == 0 ? 'HiFi' : 'Search')),
       body: IndexedStack(
         index: selectedTab,
-        children: const <Widget>[
-          BrowseScreen(),
-          SearchScreen(),
-        ],
+        children: const <Widget>[BrowseScreen(), SearchScreen()],
       ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,

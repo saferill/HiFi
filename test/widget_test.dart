@@ -18,12 +18,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         // No explicit type argument: the `Override` type is not exported
-        // uniformly across Riverpod majors, and inference already knows it.
+        // by every Riverpod major, and inference already knows it.
         overrides: [musicRepositoryProvider.overrideWithValue(fake)],
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          home: const HomeScreen(),
-        ),
+        child: MaterialApp(theme: AppTheme.light(), home: const HomeScreen()),
       ),
     );
     await tester.pumpAndSettle();
@@ -31,12 +28,13 @@ void main() {
   }
 
   Finder navDestination(String label) => find.descendant(
-        of: find.byType(NavigationBar),
-        matching: find.text(label),
-      );
+    of: find.byType(NavigationBar),
+    matching: find.text(label),
+  );
 
-  testWidgets('opens on the browse tab and loads the home shelves',
-      (WidgetTester tester) async {
+  testWidgets('opens on the browse tab and loads the home shelves', (
+    WidgetTester tester,
+  ) async {
     final repository = await pumpShell(tester);
 
     expect(repository.browseCalls, 1);
@@ -47,8 +45,9 @@ void main() {
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('shows a mood tile and an album card from the response',
-      (WidgetTester tester) async {
+  testWidgets('shows a mood tile and an album card from the response', (
+    WidgetTester tester,
+  ) async {
     await pumpShell(tester);
 
     expect(find.text('Chill'), findsOneWidget);
@@ -57,8 +56,9 @@ void main() {
     expect(find.text('Enemy'), findsOneWidget);
   });
 
-  testWidgets('switching to the search tab shows the search field',
-      (WidgetTester tester) async {
+  testWidgets('switching to the search tab shows the search field', (
+    WidgetTester tester,
+  ) async {
     await pumpShell(tester);
 
     await tester.tap(navDestination('Search'));
@@ -66,13 +66,12 @@ void main() {
 
     expect(find.byType(TextField), findsOneWidget);
     expect(find.text('Search songs, artists, albums...'), findsOneWidget);
-    expect(
-      find.text('Search for music on YouTube Music'),
-      findsOneWidget,
-    );
+    expect(find.text('Search for music on YouTube Music'), findsOneWidget);
   });
 
-  testWidgets('submitting a query renders the results', (WidgetTester tester) async {
+  testWidgets('submitting a query renders the results', (
+    WidgetTester tester,
+  ) async {
     final repository = await pumpShell(tester);
 
     await tester.tap(navDestination('Search'));
@@ -91,14 +90,16 @@ void main() {
     expect(find.text('E'), findsOneWidget);
   });
 
-  testWidgets('a failing repository shows the browse error state, not a crash',
-      (WidgetTester tester) async {
-    await pumpShell(
-      tester,
-      repository: FakeMusicRepository(failure: Exception('offline')),
-    );
+  testWidgets(
+    'a failing repository shows the browse error state, not a crash',
+    (WidgetTester tester) async {
+      await pumpShell(
+        tester,
+        repository: FakeMusicRepository(failure: Exception('offline')),
+      );
 
-    expect(find.text('Could not load this page'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
-  });
+      expect(find.text('Could not load this page'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
+    },
+  );
 }

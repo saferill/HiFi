@@ -25,10 +25,10 @@ enum PlaybackRepeat {
 
 extension PlaybackRepeatLabel on PlaybackRepeat {
   String get label => switch (this) {
-        PlaybackRepeat.off => 'Repeat off',
-        PlaybackRepeat.all => 'Repeat queue',
-        PlaybackRepeat.one => 'Repeat track',
-      };
+    PlaybackRepeat.off => 'Repeat off',
+    PlaybackRepeat.all => 'Repeat queue',
+    PlaybackRepeat.one => 'Repeat track',
+  };
 }
 
 class PlayerState {
@@ -68,8 +68,7 @@ class PlayerState {
 
   bool get hasPrevious => currentIndex > 0;
 
-  bool get hasNext =>
-      currentIndex + 1 < queue.length || isRadioEnabled;
+  bool get hasNext => currentIndex + 1 < queue.length || isRadioEnabled;
 
   PlayerState copyWith({
     Song? currentSong,
@@ -133,12 +132,14 @@ class PlayerController extends Notifier<PlayerState> {
     _subscriptions.add(
       _audioPlayer.playerStateStream.listen((playerState) {
         final processingState = playerState.processingState;
-        final isBuffering = processingState == ProcessingState.buffering ||
+        final isBuffering =
+            processingState == ProcessingState.buffering ||
             processingState == ProcessingState.loading;
 
         state = state.copyWith(
           isPlaying:
-              playerState.playing && processingState != ProcessingState.completed,
+              playerState.playing &&
+              processingState != ProcessingState.completed,
           isLoading: isBuffering,
         );
 
@@ -185,9 +186,11 @@ class PlayerController extends Notifier<PlayerState> {
   }
 
   Future<void> playSong(Song song, {int? index}) async {
-    final existingIndex =
-        state.queue.indexWhere((s) => s.videoId == song.videoId);
-    final newIndex = index ??
+    final existingIndex = state.queue.indexWhere(
+      (s) => s.videoId == song.videoId,
+    );
+    final newIndex =
+        index ??
         (existingIndex != -1
             ? existingIndex
             : (state.queue.isEmpty ? 0 : state.queue.length));
@@ -227,8 +230,7 @@ class PlayerController extends Notifier<PlayerState> {
       await _audioPlayer.setUrl(
         streamUrl,
         headers: <String, String>{
-          'User-Agent':
-              'com.google.android.apps.youtube.music/7.27.52 (Linux; U; Android 11) gzip',
+          'User-Agent': 'com.google.android.apps.youtube.music/7.27.52 (Linux; U; Android 11) gzip',
         },
       );
       if (token != _loadToken) return;
@@ -387,7 +389,9 @@ class PlayerController extends Notifier<PlayerState> {
     state = state.copyWith(isLoadingMoreQueue: true);
 
     try {
-      final result = await ref.read(musicRepositoryProvider).getRadioTracks(
+      final result = await ref
+          .read(musicRepositoryProvider)
+          .getRadioTracks(
             current.videoId,
             continuation: state.continuationToken,
           );
@@ -413,7 +417,9 @@ class PlayerController extends Notifier<PlayerState> {
     state = state.copyWith(isLoadingMoreQueue: true);
 
     try {
-      final result = await ref.read(musicRepositoryProvider).getRadioTracks(
+      final result = await ref
+          .read(musicRepositoryProvider)
+          .getRadioTracks(
             current.videoId,
             continuation: state.continuationToken,
           );

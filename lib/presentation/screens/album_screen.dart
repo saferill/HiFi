@@ -49,8 +49,9 @@ class AlbumScreen extends ConsumerWidget {
                       .read(playerControllerProvider.notifier)
                       .playQueue(songs, 0),
                   onShuffle: () {
-                    final notifier =
-                        ref.read(playerControllerProvider.notifier);
+                    final notifier = ref.read(
+                      playerControllerProvider.notifier,
+                    );
                     final shuffled = List<Song>.of(songs)..shuffle();
                     notifier.playQueue(shuffled, 0);
                     if (!ref.read(playerControllerProvider).isShuffleEnabled) {
@@ -73,8 +74,7 @@ class AlbumScreen extends ConsumerWidget {
                     song: song,
                     showAlbum: false,
                     isSelected: isCurrent,
-                    isPlaying:
-                        ref.watch(playerControllerProvider).isPlaying,
+                    isPlaying: ref.watch(playerControllerProvider).isPlaying,
                     onTap: () => ref
                         .read(playerControllerProvider.notifier)
                         .playQueue(songs, index),
@@ -206,8 +206,10 @@ class _AlbumError extends StatelessWidget {
               color: theme.colorScheme.error,
             ),
             const SizedBox(height: 12),
-            Text('Could not load this release',
-                style: theme.textTheme.titleMedium),
+            Text(
+              'Could not load this release',
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
               error.toString(),

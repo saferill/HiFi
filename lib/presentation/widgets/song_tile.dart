@@ -66,7 +66,8 @@ class SongTile extends StatelessWidget {
               : colorScheme.onSurfaceVariant,
         ),
       ),
-      trailing: trailing ??
+      trailing:
+          trailing ??
           (isSelected ? NowPlayingIndicator(isPlaying: isPlaying) : null),
     );
   }

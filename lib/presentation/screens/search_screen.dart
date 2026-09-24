@@ -78,7 +78,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _suggestionInput = '';
     });
 
-    ref.read(playerControllerProvider.notifier).playSong(
+    ref
+        .read(playerControllerProvider.notifier)
+        .playSong(
           Song(
             videoId: suggestion.videoId!,
             title: suggestion.query,
@@ -122,8 +124,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       },
                     ),
               filled: true,
-              fillColor:
-                  theme.colorScheme.surfaceContainerHighest.withValues(
+              fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
                 alpha: 0.5,
               ),
               border: OutlineInputBorder(
@@ -140,10 +141,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   input: _suggestionInput,
                   onSelected: _playSuggestion,
                 )
-              : _Results(
-                  query: _submittedQuery,
-                  searchAsync: searchAsync,
-                ),
+              : _Results(query: _submittedQuery, searchAsync: searchAsync),
         ),
       ],
     );
@@ -167,8 +165,7 @@ class _SuggestionList extends ConsumerWidget {
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
         return ListView.builder(
-          keyboardDismissBehavior:
-              ScrollViewKeyboardDismissBehavior.onDrag,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           itemCount: items.length,
           itemBuilder: (context, index) {
             final suggestion = items[index];
@@ -234,10 +231,16 @@ class _Results extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 12),
-              Text('Failed to load search results',
-                  style: theme.textTheme.titleMedium),
+              Text(
+                'Failed to load search results',
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               Text(
                 error.toString(),
