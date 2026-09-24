@@ -17,10 +17,10 @@ class AlbumScreen extends ConsumerWidget {
   /// The album name is only known once the response lands, so the bar falls
   /// back until then instead of holding a null.
   String _titleOf(AsyncValue<AlbumPageResult?> value) => value.when(
-        data: (result) => result?.album.title ?? 'Album',
-        loading: () => 'Album',
-        error: (error, stack) => 'Album',
-      );
+    data: (result) => result?.album.title ?? 'Album',
+    loading: () => 'Album',
+    error: (error, stack) => 'Album',
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
