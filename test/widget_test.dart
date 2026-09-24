@@ -1,6 +1,8 @@
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/data/repositories/music_repository.dart';
+import 'package:app/presentation/screens/browse_screen.dart';
 import 'package:app/presentation/screens/home_screen.dart';
+import 'package:app/presentation/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,54 +30,65 @@ void main() {
   }
 
   Finder navDestination(String label) => find.descendant(
-    of: find.byType(NavigationBar),
-    matching: find.text(label),
-  );
+        of: find.byType(NavigationBar),
+        matching: find.text(label),
+      );
 
-  testWidgets('opens on the browse tab and loads the home shelves', (
-    WidgetTester tester,
-  ) async {
+  /// The shell keeps both tabs alive in an [IndexedStack], so the same title
+  /// can exist twice in the tree. Every content assertion is scoped to the tab
+  /// it belongs to.
+  Finder inBrowse(String text) => find.descendant(
+        of: find.byType(BrowseScreen),
+        matching: find.text(text),
+      );
+
+  Finder inSearch(String text) => find.descendant(
+        of: find.byType(SearchScreen),
+        matching: find.text(text),
+      );
+
+  Future<void> goToSearch(WidgetTester tester) async {
+    await tester.tap(navDestination('Search'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('opens on the browse tab and loads the home shelves',
+      (WidgetTester tester) async {
     final repository = await pumpShell(tester);
 
     expect(repository.browseCalls, 1);
-    expect(find.text('Quick picks'), findsOneWidget);
-    expect(find.text('New releases'), findsOneWidget);
-    expect(find.text('Moods & genres'), findsOneWidget);
+    expect(inBrowse('Quick picks'), findsOneWidget);
+    expect(inBrowse('New releases'), findsOneWidget);
+    expect(inBrowse('Moods & genres'), findsOneWidget);
     // The browse tab shows album art, not the search field.
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('shows a mood tile and an album card from the response', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('renders mood tiles, album cards and tracks from the response',
+      (WidgetTester tester) async {
     await pumpShell(tester);
 
-    expect(find.text('Chill'), findsOneWidget);
-    expect(find.text('Mercury - Act 1'), findsOneWidget);
-    expect(find.text('Bones'), findsOneWidget);
-    expect(find.text('Enemy'), findsOneWidget);
+    expect(inBrowse('Chill'), findsOneWidget);
+    expect(inBrowse('Mercury - Act 1'), findsOneWidget);
+    expect(inBrowse('Imagine Dragons'), findsWidgets);
+    expect(inBrowse('Bones'), findsOneWidget);
+    expect(inBrowse('Enemy'), findsOneWidget);
   });
 
-  testWidgets('switching to the search tab shows the search field', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('switching to the search tab shows the search field',
+      (WidgetTester tester) async {
     await pumpShell(tester);
-
-    await tester.tap(navDestination('Search'));
-    await tester.pumpAndSettle();
+    await goToSearch(tester);
 
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Search songs, artists, albums...'), findsOneWidget);
-    expect(find.text('Search for music on YouTube Music'), findsOneWidget);
+    expect(inSearch('Search songs, artists, albums...'), findsOneWidget);
+    expect(inSearch('Search for music on YouTube Music'), findsOneWidget);
   });
 
-  testWidgets('submitting a query renders the results', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('submitting a query renders the results',
+      (WidgetTester tester) async {
     final repository = await pumpShell(tester);
-
-    await tester.tap(navDestination('Search'));
-    await tester.pumpAndSettle();
+    await goToSearch(tester);
 
     await tester.enterText(find.byType(TextField), 'imagine dragons');
     await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -83,23 +96,27 @@ void main() {
 
     expect(repository.searchCalls, 1);
     expect(repository.lastQuery, 'imagine dragons');
-    expect(find.text('Bones'), findsOneWidget);
-    // The subtitle assembles artist and length.
-    expect(find.text('Imagine Dragons • 2:46'), findsOneWidget);
-    // The explicit marker is rendered for flagged tracks.
-    expect(find.text('E'), findsOneWidget);
+    expect(inSearch('Bones'), findsOneWidget);
+    // The subtitle assembles artist and length from what the response carried.
+    expect(inSearch('Imagine Dragons • 2:46'), findsOneWidget);
+    // The explicit marker is rendered for flagged tracks only.
+    expect(inSearch('E'), findsOneWidget);
   });
 
-  testWidgets(
-    'a failing repository shows the browse error state, not a crash',
-    (WidgetTester tester) async {
-      await pumpShell(
-        tester,
-        repository: FakeMusicRepository(failure: Exception('offline')),
-      );
+  testWidgets('a failing repository shows the browse error state, not a crash',
+      (WidgetTester tester) async {
+    await pumpShell(
+      tester,
+      repository: FakeMusicRepository(failure: Exception('offline')),
+    );
 
-      expect(find.text('Could not load this page'), findsOneWidget);
-      expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
-    },
-  );
+    expect(inBrowse('Could not load this page'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BrowseScreen),
+        matching: find.widgetWithText(FilledButton, 'Retry'),
+      ),
+      findsOneWidget,
+    );
+  });
 }

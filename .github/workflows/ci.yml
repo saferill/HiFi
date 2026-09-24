@@ -129,7 +129,11 @@ jobs:
           fi
           python3 - <<'PY'
           import json, os
-          failures, total, seen = [], 0, {}
+
+          def esc(text):
+              return text.replace('%', '%25').replace('\r', ' ').replace('\n', ' ')[:400]
+
+          failures, prints, total = [], [], 0
           path = '/tmp/test.json'
           if os.path.exists(path):
               for line in open(path, encoding='utf-8', errors='replace'):
@@ -141,18 +145,25 @@ jobs:
                   except json.JSONDecodeError:
                       continue
                   t = event.get('type')
-                  if t == 'suite':
-                      suite = event.get('suite') or {}
-                      seen[suite.get('id')] = suite.get('path', '?')
+                  if t == 'print':
+                      prints.append(esc(event.get('message') or ''))
                   elif t == 'testStart':
                       total += 1
                   elif t == 'error':
-                      msg = (event.get('error') or '')[:400]
-                      msg = msg.replace('\\n', ' ').replace('%', '%25')
-                      failures.append(msg)
+                      failures.append(esc(event.get('error') or ''))
+
           for f in failures:
               print(f'::error title=Test failure::{f}')
-          print(f'tests={total} errors={len(failures)}')
+
+          # The JSON reporter's `error` events carry only "Test failed. See
+          # exception logs above." — the assertion itself arrives as a `print`
+          # event, so replay the tail of those when something failed.
+          if failures:
+              for line in prints[-14:]:
+                  if line:
+                      print(f'::error title=test output::{line}')
+
+          print(f'tests={total} errors={len(failures)} prints={len(prints)}')
           PY
           if [ "$status" -ne 0 ]; then
             echo "::error title=Tests::flutter test failed"
