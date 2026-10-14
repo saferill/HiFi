@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="assets/banner.png" alt="HiFi Logo" width="460"/>
+  <img src="assets/banner.png" alt="HiFi Banner" width="100%"/>
 </p>
 
 <p align="center">
+  <img src="assets/logo.png" alt="HiFi Logo" width="96"/>
+  <br>
   <strong>Hi-Res Audio Streaming & Player for Android and Desktop</strong>
 </p>
 
@@ -32,11 +34,24 @@ Download the latest prebuilt binaries from the [Releases](https://github.com/saf
 
 ## Screenshots
 
+### Mobile Experience
+<p align="center">
+  <img src="assets/screenshots/mobile/1.png" alt="Mobile Screen 1" width="24%"/>
+  <img src="assets/screenshots/mobile/2.png" alt="Mobile Screen 2" width="24%"/>
+  <img src="assets/screenshots/mobile/3.png" alt="Mobile Screen 3" width="24%"/>
+  <img src="assets/screenshots/mobile/4.png" alt="Mobile Screen 4" width="24%"/>
+</p>
+<p align="center">
+  <img src="assets/screenshots/mobile/5.png" alt="Mobile Screen 5" width="24%"/>
+  <img src="assets/screenshots/mobile/6.png" alt="Mobile Screen 6" width="24%"/>
+  <img src="assets/screenshots/mobile/7.png" alt="Mobile Screen 7" width="24%"/>
+</p>
+
+### Desktop Experience
 <p align="center">
   <img src="assets/screenshots/desktop_home.png" alt="HiFi Home Dashboard" width="49%"/>
   <img src="assets/screenshots/desktop_player_lyrics.png" alt="HiFi Synced Lyrics" width="49%"/>
 </p>
-
 <p align="center">
   <img src="assets/screenshots/desktop_library.png" alt="HiFi Library" width="49%"/>
   <img src="assets/screenshots/desktop_search.png" alt="HiFi Search & Discovery" width="49%"/>
