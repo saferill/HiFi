@@ -1,1 +1,1 @@
-A simple music app using YouTube Music for backend
+Hi-Res music streaming and player with synced lyrics and equalizer.

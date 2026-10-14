@@ -162,7 +162,7 @@ compose.desktop {
                 )
             } else {
                 listTarget.addAll(
-                    listOf(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.AppImage),
+                    listOf(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.AppImage),
                 )
             }
             targetFormats(*listTarget.toTypedArray())

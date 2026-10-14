@@ -49,3 +49,4 @@ sentry.properties
 /output/
 .claude/
 skills-lock.json
+/release_builds/

@@ -1,0 +1,20 @@
+HiFi adalah pemutar dan aplikasi streaming musik modern open-source yang dibangun menggunakan Compose Multiplatform untuk Android dan Desktop.
+
+Fitur Utama:
+- Streaming bebas iklan berbasis YouTube Music
+- Pemutaran audio di latar belakang dengan kontrol notifikasi lengkap
+- Lirik tersinkronisasi (LRCLIB, Spotify, dan YouTube Transcripts)
+- Pemutaran offline dan penyimpanan cache audio otomatis
+- Equalizer 10-band bawaan dengan pengaturan profil audio kustom
+- Eksplorasi Tangga Lagu, Mood, Genre, dan Podcast berkecepatan tinggi
+- Dukungan background video Spotify Canvas
+- Integrasi SponsorBlock dan Return YouTube Dislike
+- Manajemen playlist kustom dan sinkronisasi akun YouTube Music
+- Integrasi Android Auto untuk kenyamanan saat berkendara
+- Pengatur waktu tidur (Sleep Timer) dan kontrol kecepatan putar
+- Desain modern Material You (Material 3 Expressive) dengan warna dinamis
+
+HiFi terhubung langsung ke layanan publik tanpa pelacak (trackers), tanpa iklan, dan tanpa pengumpulan data pribadi.
+
+Situs Web: https://syafril.pages.dev
+Lisensi: GNU General Public License v3.0 (GPL-3.0)

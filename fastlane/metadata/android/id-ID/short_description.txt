@@ -1,0 +1,1 @@
+Aplikasi streaming dan pemutar musik Hi-Res dengan lirik dan equalizer.

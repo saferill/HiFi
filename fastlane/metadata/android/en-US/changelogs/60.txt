@@ -1,11 +1,7 @@
-New:
-- Redesigned Apple Music player and Apple Music-style lyrics
-- Redesigned Home and Library cards
-- Listening receipt, AI taste card, audio output picker
-- Live broadcasts, animated artist artwork, App log
-Improved:
-- Classic and M3E animated artwork, Settings cards, queue song menu
-- Lyrics offset in lyrics view, Windows title bar, offline artwork
-Fixed:
-- Windows settings crash, desktop file picker crash, Android 11 crash
-- Fedora sound, seek bar while paused, search history, RTL lyrics
+HiFi v2.3.0:
+- Brand new Hi-Res acoustic identity and visual theme
+- Official Windows Inno Setup native installer with bundled MPV engine
+- Enhanced synced lyrics rendering with smoother line transitions
+- Improved offline caching, download reliability, and background playback
+- Fixed desktop settings crash and audio output switching
+- Updated core Compose Multiplatform and media dependencies

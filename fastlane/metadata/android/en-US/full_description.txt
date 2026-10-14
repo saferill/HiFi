@@ -1,19 +1,20 @@
-Not a simple music player, it's HiFi
+HiFi is a modern, privacy-focused open source music client built with Compose Multiplatform for Android and Desktop.
 
-<br><b>Features:</b>
+Key Features:
+- Ad-free streaming powered by YouTube Music
+- Background audio playback with persistent media controls
+- Synced and translated lyrics support (LRCLIB, Spotify, and YouTube Transcripts)
+- Offline playback and smart audio caching
+- Built-in 10-band equalizer and custom sound profiles
+- High-speed browsing for Charts, Moods, Genres, and Podcasts
+- Spotify Canvas video background support
+- SponsorBlock and Return YouTube Dislike integration
+- Multi-account YouTube Music sync and custom playlist management
+- Android Auto integration with full queue and search support
+- Sleep timer and customizable playback speed
+- Modern Material You (Material 3 Expressive) interface with dynamic color theming
 
-- Play music from YouTube Music or YouTube for free, without ads and in the background
-- Browsing Home, Charts, Podcast, Moods & Genre with YouTube Music data at high speed
-- Search everything on YouTube
-- Analyze your playing data, create custom playlists, and sync with YouTube Music...
-- Spotify Canvas supported
-- Play 1080p video option with subtitle
-- AI song suggestions
-- Notifications from followed artists
-- Caching and offline playback support
-- Synced lyrics from HiFi Lyrics, LRCLIB, Spotify (require login) and YouTube Transcript - AI lyrics translation (BETA) (\*)
-- Personalize data (\**) and multi-YouTube-account support
-- Supports SponsorBlock and Return YouTube Dislike
-- Sleep Timer
-- Android Auto with online content
-- And many more!
+HiFi connects directly to public music backends without tracking, ads, or data collection.
+
+Website: https://syafril.pages.dev
+License: GNU General Public License v3.0 (GPL-3.0)

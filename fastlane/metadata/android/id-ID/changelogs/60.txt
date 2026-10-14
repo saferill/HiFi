@@ -1,0 +1,7 @@
+HiFi v2.3.0:
+- Identitas dan tema audio Hi-Res baru
+- Installer resmi native Windows (Inno Setup) terintegrasi MPV engine
+- Peningkatan rendering dan transisi lirik lagu tersinkronisasi
+- Peningkatan pemutaran latar belakang dan stabilitas cache offline
+- Perbaikan crash pengaturan pada desktop dan pemilihan output audio
+- Pembaruan dependensi Compose Multiplatform dan pustaka media

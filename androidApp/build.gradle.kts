@@ -278,3 +278,8 @@ if (!isFullBuild) {
         }
     }
 }
+
+sentry {
+    includeProguardMapping.set(false)
+    autoUploadProguardMapping.set(false)
+}
