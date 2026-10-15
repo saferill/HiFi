@@ -1,4 +1,4 @@
-﻿package com.hifi.music.expect.ui
+package com.hifi.music.expect.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
@@ -45,6 +45,7 @@ actual fun PlatformWebView(
     state: MutableState<WebViewState>,
     initUrl: String,
     aboveContent: @Composable (BoxScope.() -> Unit),
+    clearCookies: Boolean,
     onPageFinished: (String) -> Unit,
 ) {
     Box(
