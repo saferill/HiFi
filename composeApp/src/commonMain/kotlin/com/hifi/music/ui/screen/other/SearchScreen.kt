@@ -104,6 +104,8 @@ import com.maxrave.domain.utils.toSongEntity
 import com.maxrave.domain.utils.toTrack
 import com.hifi.music.Platform
 import com.hifi.music.expect.ui.PlatformBackHandler
+import com.hifi.music.expect.ui.layerBackdrop
+import com.hifi.music.expect.ui.rememberBackdrop
 import com.hifi.music.extension.getScreenSizeInfo
 import com.hifi.music.extension.ultraThinBarStyle
 import com.hifi.music.getPlatform
@@ -136,6 +138,7 @@ import com.hifi.music.ui.navigation.destination.list.ArtistDestination
 import com.hifi.music.ui.navigation.destination.list.PlaylistDestination
 import com.hifi.music.ui.navigation.destination.list.PodcastDestination
 import com.hifi.music.ui.navigation.destination.search.SearchDestination
+import com.hifi.music.ui.theme.LocalLiquidGlassEnabled
 import com.hifi.music.ui.theme.typo
 import com.hifi.music.viewModel.SearchScreenUIState
 import com.hifi.music.viewModel.SearchType
@@ -215,6 +218,9 @@ fun SearchScreen(
     val moodGridColumns = if (isMobilePortrait) 2 else 4
 
     val hazeState = rememberHazeState()
+    // The floating chip row refracts the page scrolling under it, so the page is the glass source and
+    // the row its sibling (nesting the row inside the source is the RuntimeShader feedback loop).
+    val chipBackdrop = rememberBackdrop(MaterialTheme.colorScheme.background)
     val suggestionsState = rememberLazyListState()
     val historyState = rememberLazyListState()
     val moodGridState = rememberLazyGridState()
@@ -393,7 +399,7 @@ fun SearchScreen(
         // equal to the bar's measured height to keep its first item clear of it.
         Crossfade(
             targetState = searchUIType,
-            modifier = Modifier.fillMaxSize().hazeSource(hazeState),
+            modifier = Modifier.fillMaxSize().then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
         ) {
             when (it) {
                 SearchUIType.SEARCH_SUGGESTIONS -> {
@@ -1188,6 +1194,7 @@ fun SearchScreen(
                                 isAnimated = uiState is SearchScreenUIState.Loading,
                                 isSelected = isSelected,
                                 text = stringResource(id.toStringRes()),
+                                backdrop = chipBackdrop,
                             ) {
                                 searchViewModel.setSearchType(id)
                             }

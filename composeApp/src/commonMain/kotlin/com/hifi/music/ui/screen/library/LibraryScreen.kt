@@ -74,6 +74,8 @@ import com.maxrave.domain.data.model.taste.TasteProfile
 import com.maxrave.domain.utils.LocalResource
 import com.maxrave.logger.Logger
 import com.hifi.music.Platform
+import com.hifi.music.expect.ui.layerBackdrop
+import com.hifi.music.expect.ui.rememberBackdrop
 import com.hifi.music.extension.copy
 import com.hifi.music.extension.isScrollingUp
 import com.hifi.music.extension.ultraThinBarStyle
@@ -98,6 +100,7 @@ import com.hifi.music.ui.icon.PeopleAlt
 import com.hifi.music.ui.icon.SimpIcons
 import com.hifi.music.ui.navigation.destination.home.ListenTogetherDestination
 import com.hifi.music.ui.navigation.destination.home.SettingsDestination
+import com.hifi.music.ui.theme.LocalLiquidGlassEnabled
 import com.hifi.music.ui.theme.typo
 import com.hifi.music.viewModel.LibraryViewModel
 import com.hifi.music.viewModel.SharedViewModel
@@ -245,8 +248,11 @@ fun LibraryScreen(
         }
     }
 
+    // The floating chip row refracts the page scrolling under it, so the page is the glass source and
+    // the row its sibling (nesting the row inside the source is the RuntimeShader feedback loop).
+    val chipBackdrop = rememberBackdrop(MaterialTheme.colorScheme.background)
     Crossfade(
-        modifier = Modifier.hazeSource(hazeState),
+        modifier = Modifier.then(if (LocalLiquidGlassEnabled.current) Modifier.layerBackdrop(chipBackdrop) else Modifier).hazeSource(hazeState),
         targetState = currentFilter,
     ) { filter ->
         when (filter) {
@@ -644,6 +650,7 @@ fun LibraryScreen(
                             LibraryChipType.CHART -> stringResource(Res.string.HiFi_charts)
                             LibraryChipType.WRAPPED -> stringResource(Res.string.wrapped)
                         },
+                    backdrop = chipBackdrop,
                 ) {
                     viewModel.setCurrentScreen(type)
                 }

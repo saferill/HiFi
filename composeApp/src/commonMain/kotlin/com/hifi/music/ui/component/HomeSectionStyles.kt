@@ -1,4 +1,4 @@
-﻿package com.hifi.music.ui.component
+package com.hifi.music.ui.component
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -143,7 +143,8 @@ fun HomeDiscoverSection(
                         ) {
                             Text(
                                 text = song.title,
-                                style = if (wide) typo().titleLarge else typo().headlineMedium,
+                                // The size of Home's section titles (HomeSectionHeader).
+                                style = typo().headlineMedium,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
