@@ -27,7 +27,7 @@ val listenTogetherModule =
         single {
             ListenTogetherClient(
                 clientVersion = "HiFi",
-                userAgent = get<AppIdentity>().userAgent,
+                userAgent = get<AppIdentity>().applicationId,
                 // Read per connection attempt, so a server changed in settings applies next time.
                 serverUrl = {
                     runBlocking { get<DataStoreManager>().getString(ListenTogetherPrefs.SERVER_URL).first().orEmpty() }
