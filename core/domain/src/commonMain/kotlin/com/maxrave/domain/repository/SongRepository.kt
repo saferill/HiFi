@@ -126,9 +126,11 @@ interface SongRepository {
 
     fun getSongInfo(videoId: String): Flow<SongInfoEntity?>
 
-    suspend fun getLikeStatus(videoId: String): Flow<Boolean>
+    suspend fun getLikeStatus(videoId: String): Flow<com.maxrave.domain.utils.YouTubeLikeStatus>
 
     suspend fun addToYouTubeLiked(mediaId: String?): Flow<Int>
+
+    suspend fun addToYouTubeDisliked(mediaId: String?): Flow<Int>
 
     suspend fun removeFromYouTubeLiked(mediaId: String?): Flow<Int>
 

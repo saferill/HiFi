@@ -1,4 +1,4 @@
-﻿package com.hifi.music.ui.component
+package com.hifi.music.ui.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
@@ -72,16 +72,6 @@ fun ReviewDialog(
         },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TextButton(onClick = {
-                    onDoneReview.invoke()
-                    // openUrl rather than the uri handler, which throws where no browser answers.
-                    runCatching { openUrl("https://x.com/maxrave_dev") }
-                }) {
-                    Text(
-                        stringResource(Res.string.follow_me_on_x),
-                        style = typo().bodySmall,
-                    )
-                }
                 Text(
                     buildAnnotatedString {
                         append(stringResource(Res.string.if_you_enjoy_using_HiFi_star_HiFi_on_github_or_leave_a_review_on))
@@ -112,6 +102,20 @@ fun ReviewDialog(
                             },
                         ) {
                             append(stringResource(Res.string.buying_me_a_coffee))
+                        }
+                        append("\n")
+                        withLink(
+                            LinkAnnotation.Url(
+                                "https://x.com/maxrave_dev",
+                                TextLinkStyles(style = SpanStyle(textDecoration = TextDecoration.Underline, color = seed)),
+                            ) {
+                                onDoneReview.invoke()
+                                onDismissRequest.invoke()
+                                // openUrl rather than the uri handler, which throws where no browser answers.
+                                runCatching { openUrl("https://x.com/maxrave_dev") }
+                            },
+                        ) {
+                            append(stringResource(Res.string.follow_me_on_x))
                         }
                     },
                     textAlign = TextAlign.Center,

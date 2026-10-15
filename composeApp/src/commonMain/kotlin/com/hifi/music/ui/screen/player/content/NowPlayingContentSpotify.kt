@@ -1,4 +1,4 @@
-﻿@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.hifi.music.ui.screen.player.content
 
@@ -179,6 +179,7 @@ import com.hifi.music.generated.resources.now_playing_upper
 import com.hifi.music.generated.resources.offline_mode
 import com.hifi.music.generated.resources.playing_on_device
 import com.hifi.music.generated.resources.published_at
+import com.hifi.music.generated.resources.radio_mix_upper
 import com.hifi.music.generated.resources.rate_lyrics
 import com.hifi.music.generated.resources.rich_synced
 import com.hifi.music.generated.resources.share_lyrics
@@ -859,7 +860,10 @@ fun NowPlayingContentSpotify(
                             verticalArrangement = Arrangement.Center,
                         ) {
                             Text(
-                                text = stringResource(Res.string.now_playing_upper),
+                                text =
+                                    stringResource(
+                                        if (state.screenData.isRadioQueue) Res.string.radio_mix_upper else Res.string.now_playing_upper,
+                                    ),
                                 style = typo().bodyMedium,
                                 color = Color.White,
                             )

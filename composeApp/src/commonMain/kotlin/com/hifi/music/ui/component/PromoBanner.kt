@@ -1,4 +1,4 @@
-﻿package com.hifi.music.ui.component
+package com.hifi.music.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -80,7 +80,6 @@ fun PromoBanner(
                 AsyncImage(
                     model = banner.imageUrl,
                     contentDescription = null,
-                    placeholder = rememberHolderPainter(),
                     contentScale = ContentScale.Fit,
                     alignment = Alignment.Center,
                     onError = { onFailed() },

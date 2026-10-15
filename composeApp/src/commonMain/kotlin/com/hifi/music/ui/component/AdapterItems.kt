@@ -103,6 +103,7 @@ import com.maxrave.domain.utils.toSongEntity
 import com.maxrave.domain.utils.toTrack
 import com.hifi.music.Platform
 import com.hifi.music.expect.ui.HorizontalScrollBar
+import com.hifi.music.extension.getStringBlocking
 import com.hifi.music.getPlatform
 import com.hifi.music.ui.navigation.destination.list.AlbumDestination
 import com.hifi.music.ui.navigation.destination.list.ArtistDestination
@@ -126,6 +127,7 @@ import com.hifi.music.generated.resources.description
 import com.hifi.music.generated.resources.more
 import com.hifi.music.generated.resources.play_all
 import com.hifi.music.generated.resources.playlist
+import com.hifi.music.generated.resources.radio
 import com.hifi.music.generated.resources.subscribers
 import com.hifi.music.generated.resources.wrapped_recap_subtitle
 import com.hifi.music.generated.resources.you
@@ -456,7 +458,7 @@ internal fun Content.playRadio(viewModel: BaseViewModel) {
             listTracks = arrayListOf(firstQueue),
             firstPlayedTrack = firstQueue,
             playlistId = "RDAMVM$videoId",
-            playlistName = title,
+            playlistName = "\"$title\" ${getStringBlocking(Res.string.radio)}",
             playlistType = PlaylistType.RADIO,
             continuation = null,
         ),

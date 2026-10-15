@@ -1,4 +1,4 @@
-﻿@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
 package com.hifi.music.ui.screen.player.content.applemusic
 
@@ -78,6 +78,7 @@ import com.hifi.music.generated.resources.Res
 import com.hifi.music.generated.resources.continue_playing
 import com.hifi.music.generated.resources.endless_queue
 import com.hifi.music.generated.resources.now_playing
+import com.hifi.music.generated.resources.radio_mix
 
 /**
  * The QUEUE body: compact header, [Info][PlaylistAdd][Shuffle][Repeat] pills, a "Continue
@@ -409,7 +410,7 @@ private fun AppleMusicContinuePlayingHeader(
             // printing an empty one.
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(Res.string.now_playing),
+                    text = stringResource(if (state.screenData.isRadioQueue) Res.string.radio_mix else Res.string.now_playing),
                     style = typography.queueSectionSubtitle,
                 )
                 val source = state.screenData.playlistName

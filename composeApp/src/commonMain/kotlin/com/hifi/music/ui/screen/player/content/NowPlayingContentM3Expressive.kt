@@ -128,6 +128,7 @@ import com.hifi.music.generated.resources.Res
 import com.hifi.music.generated.resources.audio_output
 import com.hifi.music.generated.resources.crossfading
 import com.hifi.music.generated.resources.now_playing_upper
+import com.hifi.music.generated.resources.radio_mix_upper
 
 /**
  * The Material 3 Expressive ("Tonal pills") Now Playing style.
@@ -372,7 +373,10 @@ private fun NowPlayingM3ExpressiveLayout(
                         verticalArrangement = Arrangement.Center,
                     ) {
                         Text(
-                            text = stringResource(Res.string.now_playing_upper),
+                            text =
+                                stringResource(
+                                    if (state.screenData.isRadioQueue) Res.string.radio_mix_upper else Res.string.now_playing_upper,
+                                ),
                             style = typo().bodyMedium,
                             color = Color.White,
                         )

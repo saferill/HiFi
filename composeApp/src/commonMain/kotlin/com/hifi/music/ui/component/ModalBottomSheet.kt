@@ -167,6 +167,7 @@ import com.hifi.music.ui.icon.SimpIcons
 import com.hifi.music.ui.icon.Speed
 import com.hifi.music.ui.icon.Sync
 import com.hifi.music.ui.icon.SyncDisabled
+import com.hifi.music.ui.icon.ThumbDownOutline
 import com.hifi.music.ui.icon.Tune
 import com.hifi.music.ui.icon.Update
 import com.hifi.music.ui.navigation.destination.list.AlbumDestination
@@ -1320,6 +1321,13 @@ private fun QueueItemActions(
     }
 }
 
+/** What the YouTube Dislike action in the song sheet shows. */
+enum class YouTubeDislikeState {
+    DISLIKE,
+    DISLIKING,
+    DISLIKED,
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun NowPlayingBottomSheet(
@@ -1334,6 +1342,13 @@ fun NowPlayingBottomSheet(
     onLibraryDelete: (() -> Unit)? = null,
     /** Set when opened from a queue row: adds that row's move and delete actions at the top. */
     queuePosition: QueuePosition? = null,
+    /**
+     * The now-playing track's YouTube dislike state, set only by the Now Playing screen (where the
+     * rating is fetched) and only while signed in to YouTube; null hides the Dislike action.
+     */
+    youTubeDislike: YouTubeDislikeState? = null,
+    /** Called with the videoId of the track this sheet shows. */
+    onYouTubeDislike: (videoId: String) -> Unit = {},
     dataStoreManager: DataStoreManager = koinInject<DataStoreManager>(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -1687,6 +1702,20 @@ fun NowPlayingBottomSheet(
                             viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.ToggleLike)
                         },
                     )
+                    if (youTubeDislike != null) {
+                        ActionButton(
+                            icon = SimpIcons.ThumbDownOutline,
+                            text =
+                                when (youTubeDislike) {
+                                    YouTubeDislikeState.DISLIKE -> Res.string.dislike_on_youtube
+                                    YouTubeDislikeState.DISLIKING -> Res.string.disliking
+                                    YouTubeDislikeState.DISLIKED -> Res.string.disliked
+                                },
+                            enable = youTubeDislike == YouTubeDislikeState.DISLIKE,
+                        ) {
+                            onYouTubeDislike(uiState.songUIState.videoId)
+                        }
+                    }
                     ActionButton(
                         icon =
                             when (uiState.songUIState.downloadState) {

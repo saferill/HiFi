@@ -1,4 +1,4 @@
-﻿package com.maxrave.kotlinytmusicscraper
+package com.maxrave.kotlinytmusicscraper
 
 import com.maxrave.domain.extension.now
 import com.maxrave.kotlinytmusicscraper.extractor.Extractor
@@ -986,7 +986,18 @@ class Ytmusic {
                 ),
             )
         }
-
+ 
+    suspend fun addToDisliked(videoId: String) =
+        httpClient.post("like/dislike") {
+            ytClient(WEB_REMIX, true)
+            setBody(
+                LikeBody(
+                    context = WEB_REMIX.toContext(locale, visitorData),
+                    target = LikeBody.Target(videoId),
+                ),
+            )
+        }
+ 
     suspend fun removeFromLiked(videoId: String) =
         httpClient.post("like/removelike") {
             ytClient(WEB_REMIX, true)
