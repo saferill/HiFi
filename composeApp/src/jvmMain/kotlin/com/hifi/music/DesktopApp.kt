@@ -1,4 +1,4 @@
-﻿package com.hifi.music
+package com.hifi.music
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -361,7 +361,10 @@ fun runDesktopApp(args: Array<String> = emptyArray()) {
         }
         Window(
             onCloseRequest = {
-                isVisible = false
+                mediaPlayerHandler.release()
+                Sentry.endSession()
+                exitApplication()
+                kotlin.system.exitProcess(0)
             },
             title = stringResource(Res.string.app_name),
             icon = painterResource(Res.drawable.circle_app_icon),
@@ -490,7 +493,7 @@ fun runDesktopApp(args: Array<String> = emptyArray()) {
                                 DiskCache
                                     .Builder()
                                     .directory(FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "image_cache")
-                                    .maxSizeBytes(512L * 1024 * 1024)
+                                    .maxSizeBytes(32L * 1024 * 1024)
                                     .build(),
                             ).crossfade(true)
                             .build()

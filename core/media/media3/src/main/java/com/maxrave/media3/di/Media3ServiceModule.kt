@@ -133,12 +133,12 @@ private val mediaServiceModule =
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
-        // Spotify Canvas Cache
+        // Spotify Canvas Cache (capped at 25 MB to prevent video storage bloat)
         single<SimpleCache>(qualifier = named(CANVAS_CACHE), createdAtStart = true) {
             provideSimpleCache(
                 context = androidContext(),
                 cacheName = "spotifyCanvas",
-                cacheSize = -1,
+                cacheSize = 25,
                 databaseProvider = get<DatabaseProvider>(),
             )
         }

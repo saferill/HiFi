@@ -514,7 +514,7 @@ internal class DataStoreManagerImpl(
 
     override val maxSongCacheSize =
         settingsDataStore.data.map { preferences ->
-            preferences[MAX_SONG_CACHE_SIZE] ?: -1
+            preferences[MAX_SONG_CACHE_SIZE] ?: 100
         }
 
     override suspend fun setMaxSongCacheSize(size: Int) {

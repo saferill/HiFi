@@ -1,4 +1,4 @@
-﻿@file:Suppress("UnstableApiUsage")
+@file:Suppress("UnstableApiUsage")
 
 import org.apache.commons.io.FileUtils
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -147,8 +147,18 @@ tasks.named<hydraulic.conveyor.gradle.WriteConveyorConfigTask>("writeConveyorCon
 
 compose.desktop {
     application {
-        mainClass = "com.hifi.musHiFi"
-        jvmArgs += "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        mainClass = "com.hifi.music.MainKt"
+        jvmArgs += listOf(
+            "--add-opens=java.base/java.nio=ALL-UNNAMED",
+            "-Xms48m",
+            "-Xmx128m",
+            "-XX:+UseG1GC",
+            "-XX:MinHeapFreeRatio=10",
+            "-XX:MaxHeapFreeRatio=20",
+            "-XX:G1PeriodicGCInterval=3000",
+            "-XX:+G1PeriodicGCInvokesConcurrent",
+            "-Dskiko.cache.memory.size=16777216"
+        )
 
         nativeDistributions {
             appResourcesRootDir = rootDir.resolve("mpv-natives/")
