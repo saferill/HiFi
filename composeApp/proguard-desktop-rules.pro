@@ -1,4 +1,4 @@
-﻿# ProGuard's return-type specialization narrows ActualParagraph()'s declared return type
+# ProGuard's return-type specialization narrows ActualParagraph()'s declared return type
 # from the Paragraph interface down to its only impl (SkiaParagraph). The bytecode still
 # pushes a Paragraph-typed value, so JVM 21's verifier rejects it at runtime with
 # "VerifyError: Bad return type" the moment any Text() renders (androidx.compose.ui.text).
@@ -408,3 +408,16 @@
 # JNA references the signature-polymorphic java.lang.invoke.MethodHandle.invoke(...) overloads, which
 # ProGuard can't resolve as concrete methods. JNA itself is kept above; suppress these warnings.
 -dontwarn com.sun.jna.**
+
+# AboutLibraries & Third-Party Library Screen
+-keep class com.mikepenz.aboutlibraries.** { *; }
+-keep interface com.mikepenz.aboutlibraries.** { *; }
+-keepclassmembers class com.mikepenz.aboutlibraries.** { *; }
+-keep class com.mikepenz.aboutlibraries.entity.** { *; }
+-keepclassmembers class com.mikepenz.aboutlibraries.entity.** { *; }
+-dontwarn com.mikepenz.aboutlibraries.**
+
+# MikePenz Markdown
+-keep class com.mikepenz.markdown.** { *; }
+-keep interface com.mikepenz.markdown.** { *; }
+-dontwarn com.mikepenz.markdown.**

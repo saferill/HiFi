@@ -1,4 +1,4 @@
-﻿# Add project specific ProGuard rules here.
+# Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.kts.
 #
@@ -225,3 +225,16 @@
 -dontwarn io.sentry.instrumentation.file.SentryFileOutputStream$Factory
 -dontwarn io.sentry.okhttp.SentryOkHttpEventListener
 -dontwarn io.sentry.okhttp.SentryOkHttpInterceptor
+
+# AboutLibraries & Third-Party Library Screen
+-keep class com.mikepenz.aboutlibraries.** { *; }
+-keep interface com.mikepenz.aboutlibraries.** { *; }
+-keepclassmembers class com.mikepenz.aboutlibraries.** { *; }
+-keep class com.mikepenz.aboutlibraries.entity.** { *; }
+-keepclassmembers class com.mikepenz.aboutlibraries.entity.** { *; }
+-dontwarn com.mikepenz.aboutlibraries.**
+
+# MikePenz Markdown
+-keep class com.mikepenz.markdown.** { *; }
+-keep interface com.mikepenz.markdown.** { *; }
+-dontwarn com.mikepenz.markdown.**

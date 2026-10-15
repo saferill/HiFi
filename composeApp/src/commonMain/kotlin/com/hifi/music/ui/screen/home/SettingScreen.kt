@@ -41,6 +41,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -3187,7 +3188,12 @@ fun SettingScreen(
 
     if (showThirdPartyLibraries) {
         val libraries by produceLibraries {
-            Res.readBytes("files/aboutlibraries.json").decodeToString()
+            try {
+                Res.readBytes("files/aboutlibraries.json").decodeToString()
+            } catch (e: Throwable) {
+                Logger.e("SettingScreen", "Failed to load aboutlibraries.json: ${e.message}")
+                ""
+            }
         }
         val lazyListState = rememberLazyListState()
         val canScrollBackward by remember {
@@ -3220,61 +3226,106 @@ fun SettingScreen(
             // Capture theme colors here: the ChipColors getters below run outside composition.
             val surfaceContainerHighestColor = MaterialTheme.colorScheme.surfaceContainerHighest
             val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-            LibrariesContainer(
-                libraries?.copy(
-                    libraries =
-                        libraries
-                            ?.libraries
-                            ?.distinctBy {
-                                it.name
-                            }?.toImmutableList() ?: emptyList<Library>().toImmutableList(),
-                ),
-                Modifier.fillMaxSize(),
-                lazyListState = lazyListState,
-                contentPadding = innerPadding,
-                colors =
-                    LibraryDefaults.libraryColors(
-                        licenseChipColors =
-                            object : ChipColors {
-                                override val containerColor: Color
-                                    get() = surfaceContainerHighestColor
-                                override val contentColor: Color
-                                    get() = onSurfaceColor
-                            },
-                    ),
-                header = {
-                    item {
-                        TopAppBar(
-                            windowInsets = WindowInsets(0, 0, 0, 0),
-                            title = {
-                                Text(
-                                    text =
-                                        stringResource(
-                                            Res.string.third_party_libraries,
-                                        ),
-                                    style = typo().titleMedium,
-                                )
-                            },
-                            navigationIcon = {
-                                Box(Modifier.padding(horizontal = 5.dp)) {
-                                    RippleIconButton(
-                                        SimpIcons.ArrowBackIosNew,
-                                        Modifier
-                                            .size(32.dp),
-                                        true,
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                    ) {
-                                        coroutineScope.launch {
-                                            sheetState.hide()
-                                            showThirdPartyLibraries = false
-                                        }
+            val currentLibraries = libraries
+
+            if (currentLibraries == null) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                ) {
+                    TopAppBar(
+                        windowInsets = WindowInsets(0, 0, 0, 0),
+                        title = {
+                            Text(
+                                text =
+                                    stringResource(
+                                        Res.string.third_party_libraries,
+                                    ),
+                                style = typo().titleMedium,
+                            )
+                        },
+                        navigationIcon = {
+                            Box(Modifier.padding(horizontal = 5.dp)) {
+                                RippleIconButton(
+                                    SimpIcons.ArrowBackIosNew,
+                                    Modifier
+                                        .size(32.dp),
+                                    true,
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                ) {
+                                    coroutineScope.launch {
+                                        sheetState.hide()
+                                        showThirdPartyLibraries = false
                                     }
                                 }
-                            },
+                            }
+                        },
+                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
-                },
-            )
+                }
+            } else {
+                LibrariesContainer(
+                    currentLibraries.copy(
+                        libraries =
+                            currentLibraries
+                                .libraries
+                                .distinctBy {
+                                    it.name
+                                }.toImmutableList(),
+                    ),
+                    Modifier.fillMaxSize(),
+                    lazyListState = lazyListState,
+                    contentPadding = innerPadding,
+                    colors =
+                        LibraryDefaults.libraryColors(
+                            licenseChipColors =
+                                object : ChipColors {
+                                    override val containerColor: Color
+                                        get() = surfaceContainerHighestColor
+                                    override val contentColor: Color
+                                        get() = onSurfaceColor
+                                },
+                        ),
+                    header = {
+                        item {
+                            TopAppBar(
+                                windowInsets = WindowInsets(0, 0, 0, 0),
+                                title = {
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                Res.string.third_party_libraries,
+                                            ),
+                                        style = typo().titleMedium,
+                                    )
+                                },
+                                navigationIcon = {
+                                    Box(Modifier.padding(horizontal = 5.dp)) {
+                                        RippleIconButton(
+                                            SimpIcons.ArrowBackIosNew,
+                                            Modifier
+                                                .size(32.dp),
+                                            true,
+                                            tint = MaterialTheme.colorScheme.onSurface,
+                                        ) {
+                                            coroutineScope.launch {
+                                                sheetState.hide()
+                                                showThirdPartyLibraries = false
+                                            }
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    },
+                )
+            }
         }
     }
 
