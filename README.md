@@ -87,6 +87,21 @@ Official builds are available on the [Releases](https://github.com/saferill/HiFi
 - **DI**: Koin
 - **Packaging**: AGP (Android) / Inno Setup & WiX (Windows)
 
+## Project Structure
+
+```text
+HiFi/
+├── androidApp/       # Android application module & platform services (Media3)
+├── desktopApp/       # Windows desktop application module & entry point
+├── composeApp/       # Shared Compose Multiplatform UI, screens & ViewModels
+├── core/
+│   ├── data/         # Repository implementations, caching & network clients
+│   ├── domain/       # Business logic, use cases & domain models
+│   ├── database/     # AndroidX Room SQLite database & DAOs
+│   └── service/      # Audio playback engines & streaming scrapers
+└── scripts/          # Packaging & build scripts (Inno Setup)
+```
+
 ## Building
 
 ### Prerequisites
@@ -109,6 +124,26 @@ Output: `androidApp/build/outputs/apk/release/`
 iscc scripts/windows/HiFi-setup.iss
 ```
 Output: `release_builds/windows/HiFi-2.3.0-Setup.exe`
+
+## FAQ & Troubleshooting
+
+<details>
+<summary><b>Windows: "Windows protected your PC" during installation</b></summary>
+
+Because HiFi is an independent open-source application and does not use an expensive commercial code-signing certificate, Windows SmartScreen may show a warning. Click **"More info"** and then select **"Run anyway"** to proceed with the installation.
+</details>
+
+<details>
+<summary><b>Managing storage & cache size</b></summary>
+
+HiFi caches streamed audio for responsive offline playback. You can customize the maximum cache limit or clear cached data at any time via **Settings > Storage & Cache**.
+</details>
+
+<details>
+<summary><b>Updating HiFi</b></summary>
+
+HiFi delivers updates directly via GitHub Releases. Navigate to **Settings > Check for update** to check and download new releases.
+</details>
 
 ## Maintainer
 
