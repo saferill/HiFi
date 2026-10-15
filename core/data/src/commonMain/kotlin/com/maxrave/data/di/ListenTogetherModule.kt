@@ -25,9 +25,10 @@ import org.HiFi.listentogether.ListenTogetherSession
 val listenTogetherModule =
     module {
         single {
+            val identity = get<AppIdentity>()
             ListenTogetherClient(
-                clientVersion = "HiFi",
-                userAgent = get<AppIdentity>().userAgent,
+                clientVersion = "SimpMusic",
+                userAgent = "SimpMusic/${identity.versionName} (com.maxrave.simpmusic; ${identity.platform})",
                 // Read per connection attempt, so a server changed in settings applies next time.
                 serverUrl = {
                     runBlocking { get<DataStoreManager>().getString(ListenTogetherPrefs.SERVER_URL).first().orEmpty() }
