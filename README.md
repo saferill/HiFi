@@ -30,7 +30,7 @@ Official builds are available on the [Releases](https://github.com/saferill/HiFi
 
 | OS | Package | Arch | Details |
 | :--- | :--- | :--- | :--- |
-| **Windows** | [`HiFi-2.3.0-Setup.exe`](https://github.com/saferill/HiFi/releases/latest/download/HiFi-2.3.0-Setup.exe) | x64 | Inno Setup installer with Desktop & Start Menu shortcuts |
+| **Windows** | [`HiFi-2.3.1-Setup.exe`](https://github.com/saferill/HiFi/releases/latest/download/HiFi-2.3.1-Setup.exe) | x64 | Inno Setup installer with Desktop & Start Menu shortcuts |
 | **Android** | [`HiFi-arm64-v8a.apk`](https://github.com/saferill/HiFi/releases/latest/download/androidApp-arm64-v8a-release.apk) | ARM64 | Recommended for most modern Android devices |
 | **Android** | [`HiFi-universal.apk`](https://github.com/saferill/HiFi/releases/latest/download/androidApp-universal-release.apk) | All | Universal package compatible with all Android devices |
 | **Android** | [`HiFi-armeabi-v7a.apk`](https://github.com/saferill/HiFi/releases/latest/download/androidApp-armeabi-v7a-release.apk) | ARMv7 | Legacy 32-bit Android devices |
@@ -123,7 +123,7 @@ Output: `androidApp/build/outputs/apk/release/`
 # Compile installer executable
 iscc scripts/windows/HiFi-setup.iss
 ```
-Output: `release_builds/windows/HiFi-2.3.0-Setup.exe`
+Output: `release_builds/windows/HiFi-2.3.1-Setup.exe`
 
 ## FAQ & Troubleshooting
 

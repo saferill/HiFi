@@ -1,0 +1,7 @@
+HiFi v2.3.1:
+- Optimasi proses keluar Windows: musik langsung berhenti dan aplikasi benar-benar tertutup tanpa proses sisa di Task Manager
+- Pengurangan drastis penggunaan RAM desktop (skala 120-150 MB)
+- Pembatasan cache gambar dan video background Spotify Canvas
+- Batas default penyimpanan audio 100 MB agar memori HP tidak cepat penuh
+- Pembaruan saluran update eksklusif ke HiFi GitHub Release
+- Peningkatan stabilitas dan pembersihan CI/CD

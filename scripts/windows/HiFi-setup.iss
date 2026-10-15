@@ -1,6 +1,6 @@
 ; Script generated for HiFi Music App
 #define MyAppName "HiFi"
-#define MyAppVersion "2.3.0"
+#define MyAppVersion "2.3.1"
 #define MyAppPublisher "Syafril"
 #define MyAppURL "https://syafril.pages.dev"
 #define MyAppExeName "HiFi.exe"
@@ -20,7 +20,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=..\..\release_builds\windows
-OutputBaseFilename=HiFi-2.3.0-Setup
+OutputBaseFilename=HiFi-2.3.1-Setup
 SetupIconFile={#MyIconFile}
 Compression=lzma2/max
 SolidCompression=yes

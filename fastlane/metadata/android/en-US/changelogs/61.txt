@@ -1,0 +1,7 @@
+HiFi v2.3.1:
+- Clean shutdown on Windows: audio releases immediately and process exits cleanly from Task Manager
+- Substantial desktop RAM footprint reduction (tuned to ~120-150 MB)
+- Memory and disk cache constraints for Coil images and Spotify Canvas video
+- Default song cache capped to 100 MB to avoid excessive storage growth
+- Update channel locked exclusively to HiFi GitHub Release
+- Performance improvements and streamlined repository documentation
