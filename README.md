@@ -150,6 +150,15 @@ HiFi delivers updates directly via GitHub Releases. Navigate to **Settings > Che
 **Syafril** — [syafril.pages.dev](https://syafril.pages.dev)  
 Repository: [github.com/saferill/HiFi](https://github.com/saferill/HiFi)
 
+## Acknowledgements
+
+HiFi is an open-source project based on and forked from [SimpMusic](https://github.com/maxrave-dev/SimpMusic) by [maxrave-dev](https://github.com/maxrave-dev), licensed under the GNU General Public License v3.0.
+
+Special thanks to:
+- [maxrave-dev](https://github.com/maxrave-dev) and all SimpMusic contributors for the foundational architecture and player features.
+- The [Metrolist](https://github.com/MetrolistGroup) team for the Listen Together protocol and public relay service.
+- The open-source libraries that make this project possible (viewable in-app via **Settings > Third-party libraries**).
+
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
