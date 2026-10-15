@@ -1,4 +1,4 @@
-﻿package com.hifi.music.viewModel
+package com.hifi.music.viewModel
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.viewModelScope
@@ -1138,41 +1138,23 @@ class SharedViewModel(
         // startup, can never miss a check that is already under way but not yet marked.
         _isCheckingUpdate.value = true
         viewModelScope.launch {
-            val updateChannel = dataStoreManager.updateChannel.first()
             dataStoreManager.putString(
                 "CheckForUpdateAt",
                 System.currentTimeMillis().toString(),
             )
-            if (updateChannel == DataStoreManager.GITHUB) {
-                updateRepository.checkForGithubReleaseUpdate().collectLatest { response ->
-                    val data = response.data
-                    when (response) {
-                        is Resource.Success if (data != null) -> {
-                            _updateResponse.value = data
-                            showedUpdateDialog = true
-                        }
-
-                        else -> {
-                            log("Check for update error: ${response.message}", LogLevel.WARN)
-                        }
+            updateRepository.checkForGithubReleaseUpdate().collectLatest { response ->
+                val data = response.data
+                when (response) {
+                    is Resource.Success if (data != null) -> {
+                        _updateResponse.value = data
+                        showedUpdateDialog = true
                     }
-                    _isCheckingUpdate.value = false
-                }
-            } else if (updateChannel == DataStoreManager.FDROID) {
-                updateRepository.checkForFdroidUpdate().collectLatest { response ->
-                    val data = response.data
-                    when (response) {
-                        is Resource.Success if (data != null) -> {
-                            _updateResponse.value = data
-                            showedUpdateDialog = true
-                        }
 
-                        else -> {
-                            log("Check for update error: ${response.message}", LogLevel.WARN)
-                        }
+                    else -> {
+                        log("Check for update error: ${response.message}", LogLevel.WARN)
                     }
-                    _isCheckingUpdate.value = false
                 }
+                _isCheckingUpdate.value = false
             }
         }.invokeOnCompletion {
             // Also for a channel neither branch handles, and for a check that throws: the launch
