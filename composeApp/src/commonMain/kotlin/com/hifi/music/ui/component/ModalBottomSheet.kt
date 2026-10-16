@@ -256,6 +256,7 @@ import com.hifi.music.generated.resources.plays
 import com.hifi.music.generated.resources.processing
 import com.hifi.music.generated.resources.queue
 import com.hifi.music.generated.resources.radio
+import com.hifi.music.generated.resources.remove_from_cache
 import com.hifi.music.generated.resources.save
 import com.hifi.music.generated.resources.save_to_local_playlist
 import com.hifi.music.generated.resources.saved_to_local_playlist
@@ -1344,6 +1345,7 @@ fun NowPlayingBottomSheet(
     onNavigateToOtherScreen: () -> Unit = {},
     onDelete: (() -> Unit)? = null,
     onLibraryDelete: (() -> Unit)? = null,
+    onRemoveFromCache: (() -> Unit)? = null,
     /** Set when opened from a queue row: adds that row's move and delete actions at the top. */
     queuePosition: QueuePosition? = null,
     /**
@@ -1696,6 +1698,17 @@ fun NowPlayingBottomSheet(
                             ) {
                                 hideModalBottomSheet()
                                 onLibraryDelete?.invoke()
+                            }
+                        }
+                    }
+                    Crossfade(targetState = onRemoveFromCache != null) {
+                        if (it) {
+                            ActionButton(
+                                icon = SimpIcons.Delete,
+                                text = Res.string.remove_from_cache,
+                            ) {
+                                hideModalBottomSheet()
+                                onRemoveFromCache?.invoke()
                             }
                         }
                     }

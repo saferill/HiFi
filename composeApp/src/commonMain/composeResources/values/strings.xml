@@ -36,6 +36,8 @@
     <string name="followed">Followed</string>
     <string name="most_played">Most Played</string>
     <string name="Downloaded">Downloaded</string>
+    <string name="cached">Cached</string>
+    <string name="remove_from_cache">Remove from cache</string>
     <string name="favorite_playlists">Favorite Playlists</string>
     <string name="no_favorite_playlists">No favorite playlists</string>
     <string name="downloaded_playlists">Downloaded Playlists</string>

@@ -1,4 +1,4 @@
-﻿package com.hifi.music.di
+package com.hifi.music.di
 
 import com.hifi.music.viewModel.AlbumViewModel
 import com.hifi.music.utils.VersionManager
@@ -82,10 +82,12 @@ val viewModelModule =
                 get(),
                 get(),
                 get(),
+                get(),
             )
         }
         viewModel {
             LibraryDynamicPlaylistViewModel(
+                get(),
                 get(),
                 get(),
                 get(),

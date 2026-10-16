@@ -24,6 +24,8 @@
     <string name="followed">Diikuti</string>
     <string name="most_played">Paling Sering Diputar</string>
     <string name="Downloaded">Diunduh</string>
+    <string name="cached">Cache</string>
+    <string name="remove_from_cache">Hapus dari cache</string>
     <string name="favorite_playlists">Daftar putar Favorit</string>
     <string name="no_favorite_playlists">Tidak ada daftar putar favorit</string>
     <string name="downloaded_playlists">Daftar putar Diunduh</string>
