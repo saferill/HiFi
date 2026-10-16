@@ -210,7 +210,11 @@ import com.hifi.music.generated.resources.delete
 import com.hifi.music.generated.resources.delete_playlist
 import com.hifi.music.generated.resources.delete_song_from_playlist
 import com.hifi.music.generated.resources.description
+import com.hifi.music.generated.resources.dislike_on_youtube
+import com.hifi.music.generated.resources.disliked
+import com.hifi.music.generated.resources.disliking
 import com.hifi.music.generated.resources.download
+import com.hifi.music.generated.resources.download_disabled_live
 import com.hifi.music.generated.resources.download_speed
 import com.hifi.music.generated.resources.download_this_song_video_file_to_your_device
 import com.hifi.music.generated.resources.downloaded
@@ -1716,6 +1720,11 @@ fun NowPlayingBottomSheet(
                             onYouTubeDislike(uiState.songUIState.videoId)
                         }
                     }
+                    // A live broadcast has no file to keep. The row stays visible, disabled, so the
+                    // reason can be read — the same way Add to queue says why it is blocked.
+                    val downloadBlockedAsLive =
+                        uiState.songUIState.isLive &&
+                            uiState.songUIState.downloadState == DownloadState.STATE_NOT_DOWNLOADED
                     ActionButton(
                         icon =
                             when (uiState.songUIState.downloadState) {
@@ -1734,13 +1743,18 @@ fun NowPlayingBottomSheet(
                                 Color.Unspecified
                             },
                         text =
-                            when (uiState.songUIState.downloadState) {
-                                DownloadState.STATE_NOT_DOWNLOADED -> Res.string.download
-                                DownloadState.STATE_DOWNLOADING -> Res.string.downloading
-                                DownloadState.STATE_DOWNLOADED -> Res.string.downloaded
-                                DownloadState.STATE_PREPARING -> Res.string.downloading
-                                else -> Res.string.download
+                            if (downloadBlockedAsLive) {
+                                Res.string.download_disabled_live
+                            } else {
+                                when (uiState.songUIState.downloadState) {
+                                    DownloadState.STATE_NOT_DOWNLOADED -> Res.string.download
+                                    DownloadState.STATE_DOWNLOADING -> Res.string.downloading
+                                    DownloadState.STATE_DOWNLOADED -> Res.string.downloaded
+                                    DownloadState.STATE_PREPARING -> Res.string.downloading
+                                    else -> Res.string.download
+                                }
                             },
+                        enable = !downloadBlockedAsLive,
                     ) {
                         viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
                     }

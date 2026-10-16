@@ -857,6 +857,9 @@ fun QuickPicksItem(
                             )
                         }
                     }
+                    if (data.isLive) {
+                        item { LiveBadge(modifier = Modifier.padding(end = 6.dp)) }
+                    }
                     item {
                         Text(
                             text = data.artists.toListName().connectArtists(),
@@ -1099,7 +1102,7 @@ fun HomeItemVideo(
  * SemiBold, which made the chip taller than the line it sits on.
  */
 @Composable
-private fun LiveBadge(modifier: Modifier = Modifier) {
+internal fun LiveBadge(modifier: Modifier = Modifier) {
     Text(
         text = stringResource(Res.string.live_badge),
         style = typo().bodySmall.copy(fontSize = 9.sp, lineHeight = 11.sp, fontWeight = FontWeight.Bold),

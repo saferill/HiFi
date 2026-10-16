@@ -12,6 +12,7 @@
     <string name="like">Suka</string>
     <string name="hello_blank_fragment">Halo fragmen kosong</string>
     <string name="download">Unduh</string>
+    <string name="download_disabled_live">Unduh (dinonaktifkan untuk siaran langsung)</string>
     <string name="downloaded">Diunduh</string>
     <string name="downloading">Mengunduh</string>
     <string name="preparing">Menyiapkan</string>

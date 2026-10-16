@@ -53,7 +53,7 @@ val SimpIcons.Person: ImageVector
             reflectiveQuadTo(12f, 13f)
             reflectiveQuadToRelative(3.25f, 0.39f)
             reflectiveQuadToRelative(3.15f, 1.16f)
-            quadToRelative(0.72f, 0.38f, 1.09f)
+            quadToRelative(0.72f, 0.38f, 1.16f, 1.09f)
             reflectiveQuadTo(20f, 17.2f)
             verticalLineTo(18f)
             quadToRelative(0f, 0.82f, -0.59f, 1.41f)
