@@ -639,6 +639,8 @@
     <string name="desktop_webview_description">Because of the limitations of Compose Multiplatform, I can not implement WebView on desktop.\nRead this to learn more how to log in in desktop:\n</string>
     <string name="open_blog_post">Open blog post</string>
     <string name="discord_integration">Discord integration</string>
+    <string name="join_discord_community">Join Discord Community</string>
+    <string name="join_discord_community_desc">Chat with users, report bugs, and get release updates</string>
     <string name="log_in_to_discord">Log in to Discord</string>
     <string name="intro_login_to_discord">Log in to enable Discord Rich Presence</string>
     <string name="enable_rich_presence">Enable rich presence</string>

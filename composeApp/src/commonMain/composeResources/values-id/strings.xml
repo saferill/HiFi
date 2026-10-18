@@ -509,6 +509,8 @@
     <string name="desktop_webview_description">Karena keterbatasan Compose Multiplatform, Saya tidak dapat mengimplementasikan WebView di desktop.\nBaca ini untuk mengetahui cara masuk di desktop:\n</string>
     <string name="open_blog_post">Buka postingan blog</string>
     <string name="discord_integration">Integrasi Discord</string>
+    <string name="join_discord_community">Gabung Komunitas Discord</string>
+    <string name="join_discord_community_desc">Ngobrol dengan sesama pengguna, lapor bug, &amp; info rilis terbaru</string>
     <string name="log_in_to_discord">Masuk ke Discord</string>
     <string name="intro_login_to_discord">Masuk untuk mengaktifkan Discord Rich Presence</string>
     <string name="enable_rich_presence">Aktifkan rich presence</string>

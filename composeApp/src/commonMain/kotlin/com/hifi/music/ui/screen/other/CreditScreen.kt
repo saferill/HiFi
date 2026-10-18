@@ -173,6 +173,20 @@ fun CreditScreen(
             ) {
                 Text(text = stringResource(Res.string.issue_tracker))
             }
+
+            // Discord Community button
+            TextButton(
+                onClick = {
+                    openUrl("https://discord.gg/YYd3gStPhb")
+                },
+                modifier =
+                    Modifier
+                        .align(Alignment.Start)
+                        .padding(horizontal = 25.dp)
+                        .defaultMinSize(minHeight = 1.dp, minWidth = 1.dp),
+            ) {
+                Text(text = stringResource(Res.string.join_discord_community))
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
