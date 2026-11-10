@@ -91,11 +91,15 @@ echo "Project cleaned successfully."
 
 # Step 2: Build the APK
 echo "[Step 2] Building APK..."
-./gradlew "$MODULE":assemble"$BUILD_TYPE"
+GRADLE_ARGS=()
+if [ "$BUILD_VARIANT" = "foss" ]; then
+  GRADLE_ARGS+=("-PisFullBuild=false")
+fi
+./gradlew "$MODULE":assemble"$BUILD_TYPE" "${GRADLE_ARGS[@]}"
 echo "APK built successfully."
 
 # Step 3: Locate the built APKs
-APK_PATHS=$(find "$APK_OUTPUT_DIR" -name "*.apk")
+APK_PATHS=$(find "$APK_OUTPUT_DIR" -name "*-unsigned.apk")
 if [ -z "$APK_PATHS" ]; then
   echo "Error: APKs not found in $APK_OUTPUT_DIR"
   exit 1
@@ -106,8 +110,6 @@ echo "Built APKs located: $APK_PATHS"
 for APK_PATH in $APK_PATHS; do
   ALIGNED_APK_PATH="$SIGNED_APK_OUTPUT_DIR/aligned-$(basename "${APK_PATH/-unsigned/}")"
   RELEASE_NAME=$(basename "${APK_PATH/-unsigned/}")
-  RELEASE_NAME="${RELEASE_NAME/app-/}"
-  RELEASE_NAME="${RELEASE_NAME/$MODULE-/}"
   SIGNED_APK_PATH="$SIGNED_APK_OUTPUT_DIR/HiFi-$BUILD_VARIANT$NAME_SUFFIX-$(basename "$RELEASE_NAME")"
 
   echo "[Step 4] Aligning the APK: $APK_PATH..."
