@@ -1,0 +1,7 @@
+HiFi v2.3.2:
+- Added Cached auto-playlist on Android with 2x2 grid card and Remove from cache action
+- Added LIVE badge on live stream rows, quick picks, and search suggestions
+- Redesigned Home app bar with liquid-glass filter chips, collapsing Mood chip, and Listen Together shortcut
+- Fixed login WebView ANR by initializing off the main thread and offering Retry on renderer crash
+- Added YouTube Dislike integration to the Now Playing sheet and improved Radio/Mix indicators
+- Added official Discord community link and updated third-party library credits

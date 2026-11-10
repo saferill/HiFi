@@ -1,0 +1,7 @@
+HiFi v2.3.2:
+- Menambahkan playlist otomatis Cached di Android lengkap dengan kartu grid 2x2 dan aksi Hapus dari cache
+- Menampilkan badge LIVE pada daftar lagu siaran langsung, quick picks, dan saran pencarian
+- Desain ulang app bar halaman utama dengan filter chip liquid-glass, chip Mood, dan pintasan Listen Together
+- Memperbaiki ANR WebView saat login dengan inisialisasi di luar main thread serta tombol Coba Lagi
+- Menambahkan integrasi YouTube Dislike di halaman Now Playing serta indikator Radio/Mix
+- Menambahkan tautan komunitas Discord resmi dan memperbarui halaman kredit pustaka pihak ketiga
